@@ -1,4 +1,5 @@
 # BIGf90  
+#### (B)reeding (I)nsight (G)enomics f90
   
 An R front face to run blupf90 modules.
 #### Overview
