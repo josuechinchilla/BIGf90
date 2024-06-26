@@ -54,21 +54,21 @@
 #' @export
 bf90_cv <- function(path_2_execs, missing_value_code, random_effect_col, h2, num_runs, num_folds, output_table_name, renf90_ped_name) {
   #set seed for reproducibility
-  set.seed(101919)
+  base::set.seed(101919)
 
   #define working directory
-  wd_path <- getwd()
+  wd_path <- base::getwd()
   #set base_path for results folder
-  base_path <- paste0(getwd(), "/bf90_cv_results/")
+  base_path <- base::paste0(base::getwd(),"/bf90_cv_results/")
 
   # Function to run commands on the terminal and log output
   mac_terminal_command <- function(command, logfile) {
-    system(paste(command, "2>&1 | tee -a", logfile))
+    base::system(base::paste(command, "2>&1 | tee -a", logfile))
   }
 
   # Run BF90 programs for the whole dataset
-  mac_terminal_command(command = paste0(path_2_execs, "blupf90+ renf90.par"), logfile = "BLUP_cv.log")
-  mac_terminal_command(command = paste0(path_2_execs, "predictf90 renf90.par"), logfile = "predict_cv.log")
+  mac_terminal_command(command = base::paste0(path_2_execs, "blupf90+ renf90.par"), logfile = "BLUP_cv.log")
+  mac_terminal_command(command = base::paste0(path_2_execs, "predictf90 renf90.par"), logfile = "predict_cv.log")
 
   # Prepare files for each BLUP run
   renf90 <- base::readLines("renf90.par")
@@ -82,12 +82,12 @@ bf90_cv <- function(path_2_execs, missing_value_code, random_effect_col, h2, num
     dplyr::select(-1)
 
   # Shuffle the data and create folds
-  data_shuffled <- lapply(1:num_runs, function(x) bf90_phenos[sample(base::nrow(bf90_phenos)), ] %>%
-                            dplyr::select((random_effect_col + 1)))
+  data_shuffled <- base::lapply(1:num_runs, function(x) bf90_phenos[base::sample(base::nrow(bf90_phenos)), ] %>%
+                                  dplyr::select((random_effect_col+1)))
   create_folds <- function(data) {
     n <- base::nrow(data)
     fold_size <- n %/% num_folds
-    folds <- vector("list", num_folds)
+    folds <- base::vector("list", num_folds)
     for (i in 1:num_folds) {
       start_index <- (i - 1) * fold_size + 1
       end_index <- if (i == num_folds) n else i * fold_size
@@ -95,56 +95,57 @@ bf90_cv <- function(path_2_execs, missing_value_code, random_effect_col, h2, num
     }
     folds
   }
-  folds <- lapply(data_shuffled, create_folds)
+  folds <- base::lapply(data_shuffled, create_folds)
 
   # Function to mutate phenotypes to missing value for given folds
   mutate_folds <- function(phenos, folds) {
-    lapply(1:num_folds, function(i) {
+    base::lapply(1:num_folds, function(i) {
       phenos %>%
-        dplyr::mutate(V2 = ifelse(V5 %in% folds[[i]], missing_value_code, V2))
+        dplyr::mutate(V2 = base::ifelse(V5 %in% folds[[i]], missing_value_code, V2))
     })
   }
-  mutated_data <- lapply(folds, function(f) mutate_folds(bf90_phenos, f))
+  mutated_data <- base::lapply(folds, function(f) mutate_folds(bf90_phenos, f))
 
   # Create cross-validation datasets
   for (run in 1:num_runs) {
     for (fold in 1:num_folds) {
-      file_name <- sprintf("renf90_run%d_fold%d.dat", run, fold)
+      file_name <- base::sprintf("renf90_run%d_fold%d.dat", run, fold)
       data_frame <- mutated_data[[run]][[fold]]
       utils::write.table(data_frame, file = file_name, sep = " ", row.names = FALSE, col.names = FALSE, quote = FALSE)
 
-      folder_path <- sprintf("bf90_cv_results/run%d/fold%d", run, fold)
-      if (!file.exists(folder_path)) {
-        dir.create(folder_path, recursive = TRUE)
+      folder_path <- base::sprintf("bf90_cv_results/run%d/fold%d", run, fold)
+      if (!base::file.exists(folder_path)) {
+        base::dir.create(folder_path, recursive = TRUE)
       }
-      file.rename(file_name, file.path(folder_path, file_name))
+      base::file.rename(file_name, base::file.path(folder_path, file_name))
     }
   }
 
+
   for (run in 1:num_runs) {
     for (fold in 1:num_folds) {
-      dir_path <- sprintf("bf90_cv_results/run%d/fold%d", run, fold)
-      modified_content <- gsub("renf90.dat", sprintf("renf90_run%d_fold%d.dat", run, fold), renf90)
-      base::writeLines(modified_content, file.path(dir_path, sprintf("renf90_run%d_fold%d.par", run, fold)))
+      dir_path <- base::sprintf("bf90_cv_results/run%d/fold%d", run, fold)
+      modified_content <- base::gsub("renf90.dat", base::sprintf("renf90_run%d_fold%d.dat", run, fold), renf90)
+      base::writeLines(modified_content, base::file.path(dir_path, base::sprintf("renf90_run%d_fold%d.par", run, fold)))
 
-      file.copy(renf90_ped_name, file.path(dir_path, renf90_ped_name))
-      file.copy("renf90.fields", file.path(dir_path, "renf90.fields"))
-      file.copy("renf90.inb", file.path(dir_path, "renf90.inb"))
-      file.copy("renf90.tables", file.path(dir_path, "renf90.tables"))
+      base::file.copy(renf90_ped_name, base::file.path(dir_path, renf90_ped_name))
+      base::file.copy("renf90.fields", base::file.path(dir_path, "renf90.fields"))
+      base::file.copy("renf90.inb", base::file.path(dir_path, "renf90.inb"))
+      base::file.copy("renf90.tables", base::file.path(dir_path, "renf90.tables"))
     }
   }
 
   # Run BLUPf90+ for each fold and collect EBVs
-  ebvs_for_cv_runs <- list()
+  ebvs_for_cv_runs <- base::list()
   for (run in 1:num_runs) {
-    ebvs_for_cv_list <- list()
+    ebvs_for_cv_list <- base::list()
     for (fold in 1:num_folds) {
-      setwd(file.path(base_path, sprintf("run%d/fold%d", run, fold)))
-      command <- paste0(path_2_execs, "blupf90+ ", sprintf("renf90_run%d_fold%d.par", run, fold))
-      logfile <- sprintf("blup_fold%d_run%d.log", fold, run)
+      base::setwd(base::file.path(base_path, base::sprintf("run%d/fold%d", run, fold)))
+      command <- base::paste0(path_2_execs,"blupf90+ ", base::sprintf("renf90_run%d_fold%d.par", run, fold))
+      logfile <- base::sprintf("blup_fold%d_run%d.log", fold, run)
       mac_terminal_command(command = command, logfile = logfile)
 
-      data_file <- sprintf("renf90_run%d_fold%d.dat", run, fold)
+      data_file <- base::sprintf("renf90_run%d_fold%d.dat", run, fold)
       masked_ids <- utils::read.table(data_file) %>%
         dplyr::filter(V1 == missing_value_code) %>%
         dplyr::select(4) %>%
@@ -155,27 +156,27 @@ bf90_cv <- function(path_2_execs, missing_value_code, random_effect_col, h2, num
         dplyr::select(3, 4)
 
       ebvs_for_cv_list[[fold]] <- ebvs_for_cv
-      utils::write.table(ebvs_for_cv, file = sprintf("ebvs_for_cv_run%d_fold%d.dat", run, fold), row.names = FALSE, col.names = TRUE, quote = FALSE)
-      setwd(wd_path)
+      utils::write.table(ebvs_for_cv, file = base::sprintf("ebvs_for_cv_run%d_fold%d.dat", run, fold), row.names = FALSE, col.names = TRUE, quote = FALSE)
+      base::setwd(wd_path)
     }
-    ebvs_for_cv_runs[[sprintf("ebvs_for_cv_run%d", run)]] <- do.call(base::rbind, ebvs_for_cv_list)
+    ebvs_for_cv_runs[[base::sprintf("ebvs_for_cv_run%d", run)]] <- base::do.call(base::rbind, ebvs_for_cv_list)
   }
 
   # Calculate correlations and bias
   corrected_phenos <- utils::read.table("yhat_residual", header = FALSE) %>% dplyr::select(1, 2)
   raw_phenos <- utils::read.table("renf90.dat") %>% dplyr::select(4, 1)
 
-  ystar_correlations <- numeric(num_runs)
-  yraw_correlations <- numeric(num_runs)
-  yraw_list <- vector("list", num_runs)
-  coefficients_list <- vector("list", num_runs)
-  bias_list <- numeric(num_runs)
+  ystar_correlations <- base::numeric(num_runs)
+  yraw_correlations <- base::numeric(num_runs)
+  yraw_list <- base::vector("list", num_runs)
+  coefficients_list <- base::vector("list", num_runs)
+  bias_list <- base::numeric(num_runs)
 
   for (i in 1:num_runs) {
-    ystar <- dplyr::inner_join(ebvs_for_cv_runs[[sprintf("ebvs_for_cv_run%d", i)]], corrected_phenos, by = c("V3" = "V1"))
+    ystar <- dplyr::inner_join(ebvs_for_cv_runs[[base::sprintf("ebvs_for_cv_run%d", i)]], corrected_phenos, by = c("V3" = "V1"))
     ystar_correlations[i] <- stats::cor(ystar$V4, ystar$V2)
 
-    yraw <- dplyr::inner_join(ebvs_for_cv_runs[[sprintf("ebvs_for_cv_run%d", i)]], raw_phenos, by = c("V3" = "V4"))
+    yraw <- dplyr::inner_join(ebvs_for_cv_runs[[base::sprintf("ebvs_for_cv_run%d", i)]], raw_phenos, by = c("V3" = "V4"))
     yraw_correlations[i] <- stats::cor(yraw$V4, yraw$V1)
     yraw_list[[i]] <- yraw
 
@@ -184,19 +185,19 @@ bf90_cv <- function(path_2_execs, missing_value_code, random_effect_col, h2, num
     bias_list[i] <- stats::coefficients(model)["V4"]
   }
 
-  ystar_accuracy <- round(base::mean(ystar_correlations), 3)
-  yraw_average_corr <- round(base::mean(yraw_correlations), 3)
-  yraw_accuracy <- round(yraw_average_corr / sqrt(h2), 3)
-  average_bias <- round(base::mean(bias_list), 3)
+  ystar_accuracy <- base::round(base::mean(ystar_correlations), 3)
+  yraw_average_corr <- base::round(base::mean(yraw_correlations), 3)
+  yraw_accuracy <- base::round(yraw_average_corr / base::sqrt(h2), 3)
+  average_bias <- base::round(base::mean(bias_list), 3)
 
-  data <- data.frame(
-    Metric = c(rep("y-ebv_correlation", num_runs), rep("y*-ebv_correlation", num_runs), rep("bias", num_runs), "y-ebv_average_corr", "y*-ebv_accuracy", "y_corrected_accuracy (yraw_average_corr/sqrt(h2))", "average_bias"),
-    Run = c(paste("run", 1:num_runs), paste("run", 1:num_runs), paste("run", 1:num_runs), "", "", "", ""),
-    Value = round(c(y-ebv_correlations, ystar_correlations, bias_list, yraw_average_corr, ystar_accuracy, yraw_accuracy, average_bias), 3)
+  data <- base::data.frame(
+    Metric = base::c(base::rep("y-ebv_correlations", num_runs), base::rep("y*-ebv_correlations", num_runs), base::rep("bias", num_runs), "y-ebv_average_corr", "y*-ebv_accuracy", "y_corrected_accuracy (yraw_average_corr/sqrt(h2)", "average_bias"),
+    Run = base::c(base::paste("run", 1:num_runs), base::paste("run", 1:num_runs), base::paste("run", 1:num_runs), "", "", "", ""),
+    Value = base::round(base::c(yraw_correlations, ystar_correlations, bias_list, yraw_average_corr, ystar_accuracy, yraw_accuracy, average_bias), 3)
   )
-  print(paste0("****Accuracy and bias table****"))
+  base::print (base::paste0("****Accuracy and bias table****" ))
 
   utils::write.table(data, file = output_table_name, row.names = FALSE, quote = FALSE)
 
-  print(data)
+  base::print(data)
 }
