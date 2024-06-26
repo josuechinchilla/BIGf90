@@ -76,6 +76,6 @@ This function calculates 2 accuracy estimates: correlation between raw phenotype
 # y-ebv_average_corr  0.074
 # y*-ebv_accuracy  0.925
 # y_corrected_accuracy (yraw_average_corr/sqrt(h2))  0.105
-# verage_bias  0.163
+# average_bias  0.163
 
 }
