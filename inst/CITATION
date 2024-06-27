@@ -1,6 +1,6 @@
 bibentry(
   bibtype  = "Manual",
- title    = "BIGf90: Breeding Insight Genomics R front face to run k-fold crossvalidation with blupf90 modules",
+  title    = "BIGf90: Breeding Insight Genomics R front face to run k-fold crossvalidation with blupf90 modules",
   author   = c(
     person(given = "Josue", family = "Chinchilla-Vargas", email = "jc3635@cornell.edu", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-2399-7849")),
     person(given = "Alexander M.", family = "Sandercock", role = c("aut"), comment = c(ORCID = "0000-0001-6897-1856")),
@@ -8,5 +8,5 @@ bibentry(
   ),
   year     = "2024",
   note     = "R package version 0.1.0",
-  url      = "https://github.com/josuechinchilla/BIGf90"
+  url      = "https://github.com/Breeding-Insight/BIGr"
 )
