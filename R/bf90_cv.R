@@ -8,7 +8,7 @@
 #'
 #' @param path_2_execs path to a folder that holds all blupf90 executables that ill be used (blupf90+,predictf90). This field should be in quotes "".
 #' @param missing_value_code code used in the .par file after OPTION MISSING to indicate missing phenotype, if this option is no use, this value must be 0.
-#' @param random_effect_col Column where random effects are located, found under RANDOM_GROUP in the renf90.par file.
+#' @param random_effect_col Column where random effect is located, found under RANDOM_GROUP in the renf90.par file.
 #' @param h2 estimate of narow-sense heritabilty.This value is use to calculate accuracy of ebvs
 #' @param num_runs Number of independent cross-valdation runs to be performed.
 #' @param num_folds Number of folds to be generated within each independent run.

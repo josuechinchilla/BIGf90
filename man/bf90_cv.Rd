@@ -20,7 +20,7 @@ bf90_cv(
 
 \item{missing_value_code}{code used in the .par file after OPTION MISSING to indicate missing phenotype, if this option is no use, this value must be 0.}
 
-\item{random_effect_col}{Column where random effects are located, found under RANDOM_GROUP in the renf90.par file.}
+\item{random_effect_col}{Column where random effect is located, found under RANDOM_GROUP in the renf90.par file.}
 
 \item{h2}{estimate of narow-sense heritabilty.This value is use to calculate accuracy of ebvs}
 
@@ -76,6 +76,6 @@ This function calculates 2 accuracy estimates: correlation between raw phenotype
 # y-ebv_average_corr  0.074
 # y*-ebv_accuracy  0.925
 # y_corrected_accuracy (yraw_average_corr/sqrt(h2))  0.105
-# average_bias  0.163
+# verage_bias  0.163
 
 }
