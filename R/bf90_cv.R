@@ -55,13 +55,13 @@
 #'
 #' @export
 bf90_cv <- function(path_2_execs, missing_value_code, random_effect_col, h2, num_runs, num_folds, output_table_name, renf90_ped_name, snp_file_name = NULL) {
-  #set seed for reproducibility
+  # set seed for reproducibility
   base::set.seed(101919)
 
-  #define working directory
+  # define working directory
   wd_path <- base::getwd()
-  #set base_path for results folder
-  base_path <- base::paste0(base::getwd(),"/bf90_cv_results/")
+  # set base_path for results folder
+  base_path <- base::paste0(base::getwd(), "/bf90_cv_results/")
 
   # Function to run commands on the terminal and log output
   mac_terminal_command <- function(command, logfile) {
@@ -123,22 +123,22 @@ bf90_cv <- function(path_2_execs, missing_value_code, random_effect_col, h2, num
     }
   }
 
-
   for (run in 1:num_runs) {
     for (fold in 1:num_folds) {
       dir_path <- base::sprintf("bf90_cv_results/run%d/fold%d", run, fold)
       modified_content <- base::gsub("renf90.dat", base::sprintf("renf90_run%d_fold%d.dat", run, fold), renf90)
       base::writeLines(modified_content, base::file.path(dir_path, base::sprintf("renf90_run%d_fold%d.par", run, fold)))
 
-      base::file.copy(renf90_ped_name, base::file.path(dir_path, renf90_ped_name))
-      base::file.copy("renf90.fields", base::file.path(dir_path, "renf90.fields"))
-      base::file.copy("renf90.inb", base::file.path(dir_path, "renf90.inb"))
-      base::file.copy("renf90.tables", base::file.path(dir_path, "renf90.tables"))
+      # Create symbolic links instead of copying files
+      file.symlink(base::file.path(wd_path, renf90_ped_name), base::file.path(dir_path, renf90_ped_name))
+      file.symlink(base::file.path(wd_path, "renf90.fields"), base::file.path(dir_path, "renf90.fields"))
+      file.symlink(base::file.path(wd_path, "renf90.inb"), base::file.path(dir_path, "renf90.inb"))
+      file.symlink(base::file.path(wd_path, "renf90.tables"), base::file.path(dir_path, "renf90.tables"))
 
       if (!is.null(snp_file_name)) {
         Xref_file <- paste0(snp_file_name, "_XrefID")
-        base::file.copy(snp_file_name, base::file.path(dir_path, snp_file_name))
-        base::file.copy(Xref_file, base::file.path(dir_path, Xref_file))
+        file.symlink(base::file.path(wd_path, snp_file_name), base::file.path(dir_path, snp_file_name))
+        file.symlink(base::file.path(wd_path, Xref_file), base::file.path(dir_path, Xref_file))
       }
     }
   }
@@ -149,7 +149,7 @@ bf90_cv <- function(path_2_execs, missing_value_code, random_effect_col, h2, num
     ebvs_for_cv_list <- base::list()
     for (fold in 1:num_folds) {
       base::setwd(base::file.path(base_path, base::sprintf("run%d/fold%d", run, fold)))
-      command <- base::paste0(path_2_execs,"blupf90+ ", base::sprintf("renf90_run%d_fold%d.par", run, fold))
+      command <- base::paste0(path_2_execs, "blupf90+ ", base::sprintf("renf90_run%d_fold%d.par", run, fold))
       logfile <- base::sprintf("blup_fold%d_run%d.log", fold, run)
       mac_terminal_command(command = command, logfile = logfile)
 
@@ -197,7 +197,6 @@ bf90_cv <- function(path_2_execs, missing_value_code, random_effect_col, h2, num
   yraw_average_corr <- base::round(base::mean(yraw_correlations), 3)
   yraw_accuracy <- base::round(yraw_average_corr / base::sqrt(h2), 3)
   average_bias <- base::round(base::mean(bias_list), 3)
-
   data <- base::data.frame(
     Metric = base::c(base::rep("y-ebv_correlations", num_runs), base::rep("y*-ebv_correlations", num_runs), base::rep("bias", num_runs), "y-ebv_average_corr", "y*-ebv_accuracy", "y_corrected_accuracy (yraw_average_corr/sqrt(h2)", "average_bias"),
     Run = base::c(base::paste("run", 1:num_runs), base::paste("run", 1:num_runs), base::paste("run", 1:num_runs), "", "", "", ""),
