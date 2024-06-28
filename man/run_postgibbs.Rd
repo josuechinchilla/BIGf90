@@ -19,7 +19,7 @@ This function runs postgibbsf90 using the renf90.par file used to run gibbsf90+
 \details{
 This function runs postgibbsf90 to provide diagnostic statistics,posterior means and standard deviations for analyses performed through gibbsf90+.
 This function is written to run using the same renf90.par file used with run_gibbs and its output files are be the standard output files produced by postgibbsf90.
-The user will have to enter the number of samples to burn and the number used to thin samples.
+The user will have to enter the number of samples to burn and the number used to thin samples. A log file called run_postgibbs.log is also produced.
 }
 \examples{
 ## Example

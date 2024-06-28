@@ -21,7 +21,7 @@ This function runs gibbsf90+.
 \details{
 This function runs gibbsf90+ using input from the user and a renf90.par file.
 This function is written to use a renf90.par paramererfile, therefore the function run_renumf90 needs to be used beforehand to process a .par file created by the user.
-The user will have to enter the number of samples in the MCMC chain, the number of samples to burn and the number used to thin samples.
+The user will have to enter the number of samples in the MCMC chain, the number of samples to burn and the number used to thin samples. A log file called run_gibbs.log is also produced.
 }
 \examples{
 ## Example

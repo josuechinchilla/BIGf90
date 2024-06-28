@@ -15,7 +15,7 @@ This function runs predict90.
 \details{
 This function runs predictf90 using a pre-processed parameter file called renf90.par to calculate adjusted phenotypes.
 This function is written to use a renf90.par file and a solutions file. Therefore run_renum and run_blup should be ran before using this function.
-The output files are be the standard output files produced by predictf90
+The output files are be the standard output files produced by predictf90. A log file called run_predict.log is also produced.
 }
 \examples{
 ## Example
