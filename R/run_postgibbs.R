@@ -4,7 +4,7 @@
 #'
 #' This function runs postgibbsf90 to provide diagnostic statistics,posterior means and standard deviations for analyses performed through gibbsf90+.
 #' This function is written to run using the same renf90.par file used with run_gibbs and its output files are be the standard output files produced by postgibbsf90.
-#' The user will have to enter the number of samples to burn and the number used to thin samples.
+#' The user will have to enter the number of samples to burn and the number used to thin samples. A log file called run_postgibbs.log is also produced.
 #'
 #' @param path_2_execs path to a folder that holds the renumf90 executable. This field should be in quotes "".
 #' @param postgibbs_burn number of samples to be discarded at the begining of the Gibbs sampler
@@ -27,5 +27,5 @@ run_postgibbs <- function(path_2_execs, postgibbs_burn, postgibbs_keep) {
   command_postgibbs <- paste0("printf 'renf90.par \n", postgibbs_burn, "\n", postgibbs_keep, "\n 0 ' | ", path_2_execs, "postgibbsf90")
 
   # Run the command and log the output
-  mac_terminal_command(command = command_postgibbs, logfile = "postgibbs.log")
+  mac_terminal_command(command = command_postgibbs, logfile = "run_postgibbs.log")
 }

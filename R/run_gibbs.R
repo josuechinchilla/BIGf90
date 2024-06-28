@@ -4,7 +4,7 @@
 #'
 #' This function runs gibbsf90+ using input from the user and a renf90.par file.
 #' This function is written to use a renf90.par paramererfile, therefore the function run_renumf90 needs to be used beforehand to process a .par file created by the user.
-#' The user will have to enter the number of samples in the MCMC chain, the number of samples to burn and the number used to thin samples.
+#' The user will have to enter the number of samples in the MCMC chain, the number of samples to burn and the number used to thin samples. A log file called run_gibbs.log is also produced.
 #'
 #' @param path_2_execs path to a folder that holds the renumf90 executable. This field should be in quotes "".
 #' @param gibbs_iter number of samples in the Gibbs sampler.
@@ -29,5 +29,5 @@ run_gibbs <- function(path_2_execs, gibbs_iter, gibbs_burn, gibbs_keep) {
   command_gibbs <- paste0("printf 'renf90.par \n", gibbs_iter, "\n", gibbs_burn, "\n", gibbs_keep, "' | ", path_2_execs, "gibbsf90+")
 
   # Run the command and log the output
-  mac_terminal_command(command = command_gibbs, logfile = "gibbs.log")
+  mac_terminal_command(command = command_gibbs, logfile = "run_gibbs.log")
 }

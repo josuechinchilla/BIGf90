@@ -3,7 +3,7 @@
 #' This function runs renumf90.
 #'
 #' This function runs renumf90 to process the raw parameter(.par) file to be used with the blupf90 suite of programs.
-#' The outputs will be the standard output files produced by renumf90.
+#' The outputs will be the standard output files produced by renumf90. A log file called run_renum.log is also produced.
 #'
 #' @param path_2_execs path to a folder that holds the renumf90 executable. This field should be in quotes "".
 #' @param raw_par_file name of the .par file that will be processed.  This field should be in quotes "".
@@ -23,6 +23,6 @@ run_renum <- function(path_2_execs, raw_par_file) {
 
   raw_file <- paste(base::getwd(), raw_par_file, sep = "/")
   #run mac_terminal_command
-  mac_terminal_command(command = paste0(path_2_execs, "renumf90 ", raw_par_file), logfile = "renumf90.log")
+  mac_terminal_command(command = paste0(path_2_execs, "renumf90 ", raw_par_file), logfile = "run_renum.log")
 
 }

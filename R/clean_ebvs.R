@@ -1,6 +1,6 @@
 #' Clean ebvs
 #'
-#' This function cleans and formats BLUP solutions.
+#' This function formats BLUP solutions.
 #'
 #' This function cleans and formats the raw solutions file produced by blupf90+ by removing the solutions to all effects other than the random effect (ebvs).
 #' I also matches the processed ID assigned by renumf90 to the original ID for each individual tested producing a interpretable output file with two columns: ID and EBV.
