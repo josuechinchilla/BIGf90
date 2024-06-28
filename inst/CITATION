@@ -7,6 +7,6 @@ bibentry(
     person(given = "Breeding Insight Team", role = "aut")
   ),
   year     = "2024",
-  note     = "R package version 0.1.0",
+  note     = "R package version 0.2.1",
   url      = "https://github.com/Breeding-Insight/BIGr"
 )
