@@ -34,7 +34,7 @@ run_postgibbs <- function(path_2_execs, postgibbs_burn, postgibbs_keep) {
   if (.Platform$OS.type == "unix") {
     postgibbs = "postgibbsf90"
   } else if (.Platform$OS.type == "windows") {
-    postgibbs = "postgibbsf90+.exe"
+    postgibbs = "postgibbsf90.exe"
   }
   postgibbs_exec <- paste0(path_2_execs, postgibbs)
 
