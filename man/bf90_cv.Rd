@@ -60,26 +60,4 @@ This function calculates 2 accuracy estimates: correlation between raw phenotype
 #     renf90_ped_name = "renadd03.ped",
 #     snp_file_name = "my_genos.geno" )
 
-#The function will output the file "example_run" with a layout:
-# Metric Run Value
-# y-ebv_correlation run 1 0.038
-# y-ebv_correlation run 2 0.053
-# y-ebv_correlation run 3 0.112
-# y-ebv_correlation run 4 0.075
-# y-ebv_correlation run 5 0.089
-# y*-ebv_correlation run 1 0.947
-# y*-ebv_correlation run 2 0.964
-# y*-ebv_correlation run 3 0.893
-# y*-ebv_correlation run 4 0.883
-# y*-ebv_correlation run 5 0.939
-# bias run 1 0.085
-# bias run 2 0.117
-# bias run 3 0.262
-# bias run 4 0.164
-# bias run 5 0.189
-# y-ebv_average_corr  0.074
-# y*-ebv_accuracy  0.925
-# y_corrected_accuracy (yraw_average_corr/sqrt(h2))  0.105
-# verage_bias  0.163
-
 }
