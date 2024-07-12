@@ -1,12 +1,14 @@
 Package: BIGf90
-Title: R face front for running K-fold crossvalidation and estimating ebvs and variance components with Blupf90 modules
-Version: 0.2.1
+Title: R face front for running K-fold crossvalidation, estimating ebvs and variance component estimation with Blupf90 modules
+Version: 0.3.0
 Authors: Josue Chinchilla-Vargas, Alexander M. Sandercock and Breeding Insight Team
 Maintainer:Josue Chinchilla-Vargas <jc3635@cornell.edu>
 Description: This package provides R functions to run several BLUPf90 modules. Along with an R function to run K-fold crossvalidation for univariate analyses through blupf90+. 
     The output table from the K-fold crossvalidation function calculates accuracy as cor(y,ebv^) and cor(y*,ebv^) along with bias of ebvs calculated as reg(y,ebv.)
     You will need to create the .par file to feed into Renumf90 manually. Once this is done, there are functions to run Renumf90, Blupf90+, Predictf90, Gibbsf90+ and Postgibbsf90.
-    If you need to learn how to use the blupf90 suite of programs refer to nce.ads.uga.edu/wiki/doku.php?id=start. Please remember to cite Blupf90 appropriately along with this package.
+    If you need to learn how to use the blupf90 suite of programs refer to nce.ads.uga.edu/wiki/doku.php?id=start. Please remember to cite Blupf90 appropriately along with this package  when used for publications.
+    To run the functions in this package you will need to have a directory with all the blupf90 executables so that you can indicate the path for R to find the execs.
+    As of version 0.3.0, all functions have been tested in PC and Unix environments, we have noticed that PC environments tend to have issues about permissions, so it is advised to run RStudio as administrator when planning to use this package.
 License: Apache 2.0
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
