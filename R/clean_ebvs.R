@@ -17,20 +17,46 @@
 #'
 #' @export
 clean_ebvs <- function(random_effect_col, solutions_output_name) {
-  # read in the solutions file
-  sols <- utils::read.table("solutions", header = TRUE, row.names = NULL) %>%
-    dplyr::select(2, 3, 4) %>% # keep cols for effect number, id and solution
-    base::subset(trait.effect == random_effect_col) # keep only the solutions for the random effect (ebvs)
 
-  # read in the .inb file
-  ids <- utils::read.table("renf90.inb", header = FALSE, row.names = NULL) %>%
-    dplyr::select(1, 3) # keep only columns for original id and processed id
+  # Check if necessary files exist
+  if (!file.exists("solutions")) {
+    stop("Solutions file not found: solutions")
+  }
+  if (!file.exists("renf90.inb")) {
+    stop("ID file not found: renf90.inb")
+  }
 
-  # join ids and solutions
-  final_output <- dplyr::left_join(ids, sols, by = c("V3" = "level")) %>%
-    dplyr::select(1, 4) %>%
-    dplyr::rename("ID" = "V1", "EBV" = "solution")
+  # Read in the solutions file
+  sols <- tryCatch({
+    utils::read.table("solutions", header = TRUE, row.names = NULL) %>%
+      dplyr::select(2, 3, 4) %>% # keep cols for effect number, id and solution
+      base::subset(trait.effect == random_effect_col) # keep only the solutions for the random effect (ebvs)
+  }, error = function(e) {
+    stop("Error reading solutions file: ", e$message)
+  })
 
-  # write output out
-  utils::write.table(final_output, solutions_output_name, row.names = FALSE, quote = FALSE)
+  # Read in the .inb file
+  ids <- tryCatch({
+    utils::read.table("renf90.inb", header = FALSE, row.names = NULL) %>%
+      dplyr::select(1, 3) # keep only columns for original id and processed id
+  }, error = function(e) {
+    stop("Error reading ID file: ", e$message)
+  })
+
+  # Join ids and solutions
+  final_output <- tryCatch({
+    dplyr::left_join(ids, sols, by = c("V3" = "level")) %>%
+      dplyr::select(1, 4) %>%
+      dplyr::rename("ID" = "V1", "EBV" = "solution")
+  }, error = function(e) {
+    stop("Error joining IDs and solutions: ", e$message)
+  })
+
+  # Write output
+  tryCatch({
+    utils::write.table(final_output, solutions_output_name, row.names = FALSE, quote = FALSE)
+    cat("Output written to:", solutions_output_name, "\n")
+  }, error = function(e) {
+    stop("Error writing output file: ", e$message)
+  })
 }

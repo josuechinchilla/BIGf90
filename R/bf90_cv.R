@@ -31,28 +31,7 @@
 #' #     renf90_ped_name = "renadd03.ped",
 #' #     snp_file_name = "my_genos.geno" )
 #'
-#' #The function will output the file "example_run" with a layout:
-#' # Metric Run Value
-#' # y-ebv_correlation run 1 0.038
-#' # y-ebv_correlation run 2 0.053
-#' # y-ebv_correlation run 3 0.112
-#' # y-ebv_correlation run 4 0.075
-#' # y-ebv_correlation run 5 0.089
-#' # y*-ebv_correlation run 1 0.947
-#' # y*-ebv_correlation run 2 0.964
-#' # y*-ebv_correlation run 3 0.893
-#' # y*-ebv_correlation run 4 0.883
-#' # y*-ebv_correlation run 5 0.939
-#' # bias run 1 0.085
-#' # bias run 2 0.117
-#' # bias run 3 0.262
-#' # bias run 4 0.164
-#' # bias run 5 0.189
-#' # y-ebv_average_corr  0.074
-#' # y*-ebv_accuracy  0.925
-#' # y_corrected_accuracy (yraw_average_corr/sqrt(h2))  0.105
-#' # verage_bias  0.163
-#'
+
 #' @export
 bf90_cv <- function(path_2_execs, missing_value_code, random_effect_col, h2, num_runs, num_folds, output_table_name, renf90_ped_name, snp_file_name = NULL) {
   # set seed for reproducibility
@@ -64,13 +43,48 @@ bf90_cv <- function(path_2_execs, missing_value_code, random_effect_col, h2, num
   base_path <- base::paste0(base::getwd(), "/bf90_cv_results/")
 
   # Function to run commands on the terminal and log output
-  mac_terminal_command <- function(command, logfile) {
-    base::system(base::paste(command, "2>&1 | tee -a", logfile))
+  execute_command <- function(command, logfile) {
+    if (.Platform$OS.type == "unix") {
+      output <- system(paste(command, "2>&1 | tee -a", logfile), intern = TRUE)
+    } else if (.Platform$OS.type == "windows") {
+      output <- system(paste("cmd /c", command, ">", logfile, "2>&1"), intern = TRUE)
+    } else {
+      stop("Unsupported OS type")
+    }
+    return(output)
+  }
+
+  #check id pedigree and genotype file are present
+
+  if (!file.exists(renf90_ped_name)) {
+    stop("Parameter file not found at: ", renf90_ped_name)
+  }
+
+  if (!file.exists("renf90.par")) {
+    stop("Parameter file not found at: ", "renf90.par")
+  }
+
+  if (!is.null(snp_file_name)) {
+    if (!file.exists(snp_file_name)) {
+      stop("Parameter file not found at:", snp_file_name)
+    }
+  }
+
+  #Assign .exes or not based on OS
+  if (.Platform$OS.type == "unix") {
+    predict = "predictf90"
+    blup = "blupf90+"
+  } else if (.Platform$OS.type == "windows") {
+    predict = "predictf90.exe"
+    blup = "blupf90+.exe"
   }
 
   # Run BF90 programs for the whole dataset
-  mac_terminal_command(command = base::paste0(path_2_execs, "blupf90+ renf90.par"), logfile = "BLUP_cv.log")
-  mac_terminal_command(command = base::paste0(path_2_execs, "predictf90 renf90.par"), logfile = "predict_cv.log")
+  output <- execute_command(command = paste0(path_2_execs, blup, " renf90.par"), logfile = "run_blup.log")
+
+  command_predict <- paste0(path_2_execs, predict, " renf90.par")
+  output <- execute_command(command = command_predict, logfile = "run_predict.log")
+
 
   # Prepare files for each BLUP run
   renf90 <- base::readLines("renf90.par")
@@ -85,7 +99,7 @@ bf90_cv <- function(path_2_execs, missing_value_code, random_effect_col, h2, num
 
   # Shuffle the data and create folds
   data_shuffled <- base::lapply(1:num_runs, function(x) bf90_phenos[base::sample(base::nrow(bf90_phenos)), ] %>%
-                                  dplyr::select((random_effect_col+1)))
+                                  dplyr::select((random_effect_col + 1)))
   create_folds <- function(data) {
     n <- base::nrow(data)
     fold_size <- n %/% num_folds
@@ -109,37 +123,35 @@ bf90_cv <- function(path_2_execs, missing_value_code, random_effect_col, h2, num
   mutated_data <- base::lapply(folds, function(f) mutate_folds(bf90_phenos, f))
 
   # Create cross-validation datasets
-  for (run in 1:num_runs) {
-    for (fold in 1:num_folds) {
-      file_name <- base::sprintf("renf90_run%d_fold%d.dat", run, fold)
-      data_frame <- mutated_data[[run]][[fold]]
-      utils::write.table(data_frame, file = file_name, sep = " ", row.names = FALSE, col.names = FALSE, quote = FALSE)
+  create_cv_datasets <- function(run, fold, data_frame, dir_path) {
+    file_name <- base::sprintf("renf90_run%d_fold%d.dat", run, fold)
+    utils::write.table(data_frame, file = file_name, sep = " ", row.names = FALSE, col.names = FALSE, quote = FALSE)
 
-      folder_path <- base::sprintf("bf90_cv_results/run%d/fold%d", run, fold)
-      if (!base::file.exists(folder_path)) {
-        base::dir.create(folder_path, recursive = TRUE)
-      }
-      base::file.rename(file_name, base::file.path(folder_path, file_name))
+    if (!base::file.exists(dir_path)) {
+      base::dir.create(dir_path, recursive = TRUE)
+    }
+    base::file.rename(file_name, base::file.path(dir_path, file_name))
+
+    modified_content <- base::gsub("renf90.dat", base::sprintf("renf90_run%d_fold%d.dat", run, fold), renf90)
+    base::writeLines(modified_content, base::file.path(dir_path, base::sprintf("renf90_run%d_fold%d.par", run, fold)))
+
+    # Create symbolic links instead of copying files
+    file.symlink(base::file.path(wd_path, renf90_ped_name), base::file.path(dir_path, renf90_ped_name))
+    file.symlink(base::file.path(wd_path, "renf90.fields"), base::file.path(dir_path, "renf90.fields"))
+    file.symlink(base::file.path(wd_path, "renf90.inb"), base::file.path(dir_path, "renf90.inb"))
+    file.symlink(base::file.path(wd_path, "renf90.tables"), base::file.path(dir_path, "renf90.tables"))
+
+    if (!is.null(snp_file_name)) {
+      Xref_file <- paste0(snp_file_name, "_XrefID")
+      file.symlink(base::file.path(wd_path, snp_file_name), base::file.path(dir_path, snp_file_name))
+      file.symlink(base::file.path(wd_path, Xref_file), base::file.path(dir_path, Xref_file))
     }
   }
 
   for (run in 1:num_runs) {
     for (fold in 1:num_folds) {
       dir_path <- base::sprintf("bf90_cv_results/run%d/fold%d", run, fold)
-      modified_content <- base::gsub("renf90.dat", base::sprintf("renf90_run%d_fold%d.dat", run, fold), renf90)
-      base::writeLines(modified_content, base::file.path(dir_path, base::sprintf("renf90_run%d_fold%d.par", run, fold)))
-
-      # Create symbolic links instead of copying files
-      file.symlink(base::file.path(wd_path, renf90_ped_name), base::file.path(dir_path, renf90_ped_name))
-      file.symlink(base::file.path(wd_path, "renf90.fields"), base::file.path(dir_path, "renf90.fields"))
-      file.symlink(base::file.path(wd_path, "renf90.inb"), base::file.path(dir_path, "renf90.inb"))
-      file.symlink(base::file.path(wd_path, "renf90.tables"), base::file.path(dir_path, "renf90.tables"))
-
-      if (!is.null(snp_file_name)) {
-        Xref_file <- paste0(snp_file_name, "_XrefID")
-        file.symlink(base::file.path(wd_path, snp_file_name), base::file.path(dir_path, snp_file_name))
-        file.symlink(base::file.path(wd_path, Xref_file), base::file.path(dir_path, Xref_file))
-      }
+      create_cv_datasets(run, fold, mutated_data[[run]][[fold]], dir_path)
     }
   }
 
@@ -149,9 +161,9 @@ bf90_cv <- function(path_2_execs, missing_value_code, random_effect_col, h2, num
     ebvs_for_cv_list <- base::list()
     for (fold in 1:num_folds) {
       base::setwd(base::file.path(base_path, base::sprintf("run%d/fold%d", run, fold)))
-      command <- base::paste0(path_2_execs, "blupf90+ ", base::sprintf("renf90_run%d_fold%d.par", run, fold))
+      command <- base::paste0(path_2_execs, blup, base::sprintf(" renf90_run%d_fold%d.par", run, fold))
       logfile <- base::sprintf("blup_fold%d_run%d.log", fold, run)
-      mac_terminal_command(command = command, logfile = logfile)
+      execute_command(command = command, logfile = logfile)
 
       data_file <- base::sprintf("renf90_run%d_fold%d.dat", run, fold)
       masked_ids <- utils::read.table(data_file) %>%
@@ -197,6 +209,7 @@ bf90_cv <- function(path_2_execs, missing_value_code, random_effect_col, h2, num
   yraw_average_corr <- base::round(base::mean(yraw_correlations), 3)
   yraw_accuracy <- base::round(yraw_average_corr / base::sqrt(h2), 3)
   average_bias <- base::round(base::mean(bias_list), 3)
+
   data <- base::data.frame(
     Metric = base::c(base::rep("y-ebv_correlations", num_runs), base::rep("y*-ebv_correlations", num_runs), base::rep("bias", num_runs), "y-ebv_average_corr", "y*-ebv_accuracy", "y_corrected_accuracy (yraw_average_corr/sqrt(h2)", "average_bias"),
     Run = base::c(base::paste("run", 1:num_runs), base::paste("run", 1:num_runs), base::paste("run", 1:num_runs), "", "", "", ""),

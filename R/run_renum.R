@@ -17,12 +17,44 @@
 run_renum <- function(path_2_execs, raw_par_file) {
 
   # Function to run commands on the terminal and log output
-  mac_terminal_command <- function(command, logfile) {
-    base::system(paste(command, "2>&1 | tee -a", logfile))
+  execute_command <- function(command, logfile) {
+    if (.Platform$OS.type == "unix") {
+      output <- system(paste(command, "2>&1 | tee -a", logfile), intern = TRUE)
+    } else if (.Platform$OS.type == "windows") {
+      output <- system(paste("cmd /c", command, ">", logfile, "2>&1"), intern = TRUE)
+    } else {
+      stop("Unsupported OS type")
+    }
+    return(output)
+  }
+
+  #Assign .exe or not based on OS
+  if (.Platform$OS.type == "unix") {
+    renum = "renumf90"
+  } else if (.Platform$OS.type == "windows") {
+    renum = "renumf90.exe"
   }
 
   raw_file <- paste(base::getwd(), raw_par_file, sep = "/")
-  #run mac_terminal_command
-  mac_terminal_command(command = paste0(path_2_execs, "renumf90 ", raw_par_file), logfile = "run_renum.log")
+  # Construct the command
+  command_renum <- paste0(path_2_execs, renum," ",raw_par_file)
 
+  # Check if executable and parameter files exist
+  if (!file.exists(paste0(path_2_execs, renum))) {
+    stop("Executable not found at: ", paste0(path_2_execs, renum))
+  }
+  if (!file.exists(raw_file)) {
+    stop("Parameter file not found at: ", raw_file)
+  }
+
+  # Run the command and log the output
+  output <- execute_command(command = command_renum, logfile = "run_renum.log")
+
+  # Capture and print the log file content
+  if (file.exists("run_renum.log")) {
+    cat("Log file content:\n")
+    cat(readLines("run_renum.log"), sep = "\n")
+  } else {
+    cat("Log file not created.\n")
+  }
 }

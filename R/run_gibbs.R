@@ -20,14 +20,62 @@
 #'
 #' @export
 run_gibbs <- function(path_2_execs, gibbs_iter, gibbs_burn, gibbs_keep) {
-  # Define the mac_terminal_command function
-  mac_terminal_command <- function(command, logfile) {
-    base::system(paste(command, "2>&1 | tee -a", logfile))
+  # Function to run commands on the terminal and log output
+  execute_command <- function(command, logfile) {
+    if (.Platform$OS.type == "unix") {
+      output <- system(paste(command, "2>&1 | tee -a", logfile), intern = TRUE)
+    } else if (.Platform$OS.type == "windows") {
+      output <- system(paste("cmd /c", command, ">", logfile, "2>&1"), intern = TRUE)
+    } else {
+      stop("Unsupported OS type")
+    }
+    return(output)
   }
 
-  # Construct the command with the given inputs
-  command_gibbs <- paste0("printf 'renf90.par \n", gibbs_iter, "\n", gibbs_burn, "\n", gibbs_keep, "' | ", path_2_execs, "gibbsf90+")
+  #Assign .exe or not based on OS
+  if (.Platform$OS.type == "unix") {
+    gibbs = "gibbsf90+"
+  } else if (.Platform$OS.type == "windows") {
+    gibbs = "gibbsf90+.exe"
+  }
+  gibbs_exec <- paste0(path_2_execs, gibbs)
+
+  # Check if executable exists
+  if (!file.exists(gibbs_exec)) {
+    stop("Executable not found at: ", gibbs_exec)
+  }
+  if (!file.exists("renf90.par")) {
+    stop("Parameter file not found: renf90.par")
+  }
+
+  # Create a temporary file with the inputs
+  temp_input_file <- tempfile()
+  writeLines(c("renf90.par", gibbs_iter, gibbs_burn, gibbs_keep), temp_input_file)
+
+  # Construct the command to use the input file
+  if (.Platform$OS.type == "unix") {
+    command_gibbs <- paste0("cat ", temp_input_file, " | ", gibbs_exec)
+  } else if (.Platform$OS.type == "windows") {
+    command_gibbs <- paste0("type ", temp_input_file, " | \"", gibbs_exec, "\"")
+  }
+
+  # Debugging: Print the constructed command
+  cat("Running command:", command_gibbs, "\n")
 
   # Run the command and log the output
-  mac_terminal_command(command = command_gibbs, logfile = "run_gibbs.log")
+  output <- execute_command(command = command_gibbs, logfile = "run_gibbs.log")
+
+  # Remove the temporary file
+  unlink(temp_input_file)
+
+  # Debugging: Print the output
+  cat("Command output:", output, "\n")
+
+  # Capture and print the log file content
+  if (file.exists("run_gibbs.log")) {
+    cat("Log file content:\n")
+    cat(readLines("run_gibbs.log"), sep = "\n")
+  } else {
+    cat("Log file not created.\n")
+  }
 }
