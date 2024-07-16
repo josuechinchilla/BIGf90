@@ -19,9 +19,11 @@ This function runs renumf90 to process the raw parameter(.par) file to be used w
 The outputs will be the standard output files produced by renumf90. A log file called run_renum.log is also produced.
 }
 \examples{
-## Example
 
-# run_renum(path_2_execs = "/Users/johndoe/Desktop/bf90_execs/",
- raw_par_file = "weight_2022_no_cov_cv.par")
+\donttest{
+ #run_renum(path_2_execs = "path/bf90_execs/", 
+ #raw_par_file = "weight_2022_no_cov_cv.par")
+}
+
 
 }
