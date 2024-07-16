@@ -10,11 +10,11 @@
 #' @return a tab-separated file that includes the original id and ebv for all individuals for which an EBV was produced.
 #' @import dplyr
 #' @examples
-#' ## Example
 #'
-#'clean_ebvs(3,
-#'"my_clean_ebvs")
-#'
+#' \donttest{
+#'   #clean_ebvs(3, "my_clean_ebvs")
+#' }
+#' 
 #' @export
 clean_ebvs <- function(random_effect_col, solutions_output_name) {
 

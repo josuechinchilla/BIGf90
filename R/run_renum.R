@@ -8,11 +8,13 @@
 #' @param path_2_execs path to a folder that holds the renumf90 executable. This field should be in quotes "".
 #' @param raw_par_file name of the .par file that will be processed.  This field should be in quotes "".
 #' @examples
-#' ## Example
-#'
-#' # run_renum(path_2_execs = "/Users/johndoe/Desktop/bf90_execs/",
-#'  raw_par_file = "weight_2022_no_cov_cv.par")
-#'
+#' 
+#' \donttest{
+#'  #run_renum(path_2_execs = "path/bf90_execs/", 
+#'  #raw_par_file = "weight_2022_no_cov_cv.par")
+#' }
+#' 
+#' 
 #' @export
 run_renum <- function(path_2_execs, raw_par_file) {
 

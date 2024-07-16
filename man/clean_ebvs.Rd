@@ -22,9 +22,9 @@ This function cleans and formats the raw solutions file produced by blupf90+ by 
 I also matches the processed ID assigned by renumf90 to the original ID for each individual tested producing a interpretable output file with two columns: ID and EBV.
 }
 \examples{
-## Example
 
-clean_ebvs(3,
-"my_clean_ebvs")
+\donttest{
+  #clean_ebvs(3, "my_clean_ebvs")
+}
 
 }
