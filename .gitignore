@@ -1,3 +1,8 @@
 .DS_store
 .Rproj.user
+.Rbuildignore
 BIGf90.Rproj
+inst/exec_mac
+inst/data
+tests/
+.Rhistory
