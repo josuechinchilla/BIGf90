@@ -14,11 +14,11 @@ run_renum(
 \arguments{
 \item{path_2_execs}{path to a folder that holds the renumf90 executable. This field should be in quotes "".}
 
+\item{raw_par_files}{name of the .par file that will be processed.  This field should be in quotes "".}
+
 \item{output_files_dir}{path to the folder to store the output files renadd03.ped renf90.dat renf90.fields renf90.inb renf90.par renf90.tables run_renum.log}
 
 \item{verbose}{logical if TRUE prints log information}
-
-\item{raw_par_file}{name of the .par file that will be processed.  This field should be in quotes "".}
 }
 \description{
 This function runs renumf90.

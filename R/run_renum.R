@@ -6,7 +6,7 @@
 #' The outputs will be the standard output files produced by renumf90. A log file called run_renum.log is also produced.
 #'
 #' @param path_2_execs path to a folder that holds the renumf90 executable. This field should be in quotes "".
-#' @param raw_par_file name of the .par file that will be processed.  This field should be in quotes "".
+#' @param raw_par_files name of the .par file that will be processed.  This field should be in quotes "".
 #' @param output_files_dir path to the folder to store the output files renadd03.ped renf90.dat renf90.fields renf90.inb renf90.par renf90.tables run_renum.log
 #' @param verbose logical if TRUE prints log information
 #' @examples
