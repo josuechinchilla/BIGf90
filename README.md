@@ -14,7 +14,7 @@ Please note that as of version 0.3.0 functions are written to work on both unix 
 When running on windows always run RStudio as administrator to avoid issues with BIGf90 functions.
 
 #### To install package:  
-install.packages("devtools") #If not already installed  
+install.packages("devtools") #If not already installed   
 library(devtools)  
 devtools::install_github("josuechinchilla/BIGf90")  
 library("BIGf90")  
