@@ -8,3 +8,4 @@
 * Output directories need to exist. The function will stop if they don´t
 * Automatic installation checks included
 * NEWS file included
+* GitHub example
