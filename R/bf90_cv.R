@@ -56,8 +56,8 @@ bf90_cv <- function(missing_value_code = -999,
   #check id pedigree and genotype file are present
   if (!file.exists(renf90_ped_name)) {
     stop("Parameter file not found at: ", renf90_ped_name)
-    renf90_ped_name <- normalizePath(renf90_ped_name)
   }
+  renf90_ped_name <- normalizePath(renf90_ped_name)
   
   if (!is.null(snp_file_name)) {
     if (!file.exists(snp_file_name)) {
@@ -120,7 +120,7 @@ bf90_cv <- function(missing_value_code = -999,
   
   # Prepare files for each BLUP run
   renf90 <- base::readLines(paste0("renf90.par"))
-  ped_file <- renf90_ped_name
+  #ped_file <- dirname(renf90_ped_name)
   fields_file <- base::readLines(paste0("renf90.fields"))
   inb_file <- base::readLines(paste0("renf90.inb"))
   tables_file <- base::readLines(paste0("renf90.tables"))
@@ -152,7 +152,7 @@ bf90_cv <- function(missing_value_code = -999,
     ebvs_for_cv_list <- base::list()
     for (fold in 1:num_folds) {
       base::setwd(base::file.path(output_files_dir, base::sprintf("run%d/fold%d", run, fold)))
-      command <- base::paste0(path_2_execs, blup, base::sprintf(" renf90_run%d_fold%d.par", run, fold))
+      command <- base::paste0(file.path(path_2_execs, blup), base::sprintf(" renf90_run%d_fold%d.par", run, fold))
       logfile <- base::sprintf("blup_fold%d_run%d.log", fold, run)
       execute_command(command = command, logfile = logfile)
 
@@ -162,7 +162,7 @@ bf90_cv <- function(missing_value_code = -999,
         dplyr::select(4) %>%
         base::unlist()
 
-      ebvs_for_cv <- utils::read.table(paste0(output_files_dir,"/solutions"), header = FALSE, skip = 1) %>%
+      ebvs_for_cv <- utils::read.table("solutions", header = FALSE, skip = 1) %>%
         dplyr::filter(V2 == random_effect_col & V3 %in% masked_ids) %>%
         dplyr::select(3, 4)
 
