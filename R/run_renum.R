@@ -10,17 +10,17 @@
 #' @param output_files_dir path to the folder to store the output files renadd03.ped renf90.dat renf90.fields renf90.inb renf90.par renf90.tables run_renum.log
 #' @param verbose logical if TRUE prints log information
 #' @examples
-#' 
+#'
 #' \donttest{
-#'  #run_renum(path_2_execs = "path/bf90_execs/", 
+#'  #run_renum(path_2_execs = "path/bf90_execs/",
 #'  #input_files_dir = "weight_2022_no_cov_cv.par")
 #' }
-#' 
-#' 
+#'
+#'
 #' @export
-run_renum <- function(path_2_execs = ".", 
-                      raw_par_files = NULL, 
-                      output_files_dir = "results", 
+run_renum <- function(path_2_execs = ".",
+                      raw_par_files = NULL,
+                      output_files_dir = "results",
                       verbose = TRUE) {
 
   # Checks
@@ -29,28 +29,28 @@ run_renum <- function(path_2_execs = ".",
     if(length(check_files) > 0) warning(paste("Directory", output_files_dir, "is not empty. Some files may be replaced."))
     output_files_dir <- normalizePath(output_files_dir)
   } else {
-    stop(paste("Directory", output_files_dir, "does not exist. Create it before running the function."))
+    stop(paste("Directory '", output_files_dir, "' does not exist. Create it before running the function."))
   }
-  
+
   path_2_execs <- normalizePath(path_2_execs)
-  
+
   if(is.null(raw_par_files)) stop("Define raw_par_file.")
   raw_file <- normalizePath(raw_par_files)
   input_files_dir <- dirname(raw_file)
-  
+
   if (!file.exists(raw_file)) {
     stop("Parameter file not found at: ", raw_file)
   }
-  
+
   #Assign .exe or not based on OS
   if (.Platform$OS.type == "unix") {
     renum = "renumf90"
   } else if (.Platform$OS.type == "windows") {
     renum = "renumf90.exe"
   }
-  
+
   cur_dir <- getwd() # save working directory location
-  
+
   # Construct the command
   command_renum <- paste0(file.path(path_2_execs, renum)," ", raw_file)
 
@@ -58,7 +58,7 @@ run_renum <- function(path_2_execs = ".",
   if (!file.exists(file.path(path_2_execs, renum))) {
     stop("Executable not found at: ", paste0(path_2_execs, renum))
   }
-  
+
   # Run the command and log the output
   setwd(input_files_dir)
   output <- execute_command(command = command_renum, logfile = "run_renum.log")
@@ -72,12 +72,12 @@ run_renum <- function(path_2_execs = ".",
       cat("Log file not created.\n")
     }
   }
-  
+
   # Move generated files to working directory
   system(paste0("mv renadd03.ped renf90.dat renf90.fields renf90.inb renf90.par renf90.tables run_renum.log ", output_files_dir))
-  
+
   # Return to past working directory
-  setwd(cur_dir) 
+  setwd(cur_dir)
 }
 
 

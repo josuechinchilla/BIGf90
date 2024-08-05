@@ -16,10 +16,10 @@
 #' @param snp_file_name the name of the genotype file to be used. If use, this field should be in quotes"". Default for the function is no genotype file.
 #' @param path_2_execs path to a folder that holds all blupf90 executables that ill be used (blupf90+,predictf90). This field should be in quotes "".
 #' @param input_files_dir directory containing files renf90.par renf90.fields renf90.inb renf90.tables renf90.dat
-#' @param output_files_dir path to directory to store the output files 
+#' @param output_files_dir path to directory to store the output files
 #' @param seed set seed for the stochastic process
 #' @param verbose logical defining if information will be printed on the console
-#' 
+#'
 #' @return a tab-separated file that includes accuracy and bias estimates of ebvs.
 #' @import dplyr
 #' @examples
@@ -38,41 +38,52 @@
 #'
 #'
 #' @export
-bf90_cv <- function(missing_value_code = -999, 
-                    random_effect_col = 3, 
-                    h2 = 0.5, 
-                    num_runs = 5, 
-                    num_folds = 10, 
+bf90_cv <- function(missing_value_code = -999,
+                    random_effect_col = 3,
+                    h2 = 0.5,
+                    num_runs = 5,
+                    num_folds = 10,
                     path_2_execs = ".",
                     input_files_dir = ".",
                     output_files_dir = ".",
-                    output_table_name = NULL, 
-                    renf90_ped_name="renadd03.ped", 
+                    output_table_name = NULL,
+                    renf90_ped_name="renadd03.ped",
                     snp_file_name = NULL,
                     seed = 101919,
                     verbose = TRUE) {
-  
-  
+
+
   #check id pedigree and genotype file are present
   if (!file.exists(renf90_ped_name)) {
     stop("Parameter file not found at: ", renf90_ped_name)
   }
   renf90_ped_name <- normalizePath(renf90_ped_name)
-  
+
+  input_files_dir <- normalizePath(input_files_dir)
+
+  if (!file.exists(file.path(input_files_dir,"renf90.par"))) stop("File 'renf90.par' not found at: ", input_files_dir)
+  if (!file.exists(file.path(input_files_dir,"renf90.inb"))) stop("File 'renf90.inb' not found at: ", input_files_dir)
+  if (!file.exists(file.path(input_files_dir,"renf90.fields"))) stop("File 'renf90.fields' not found at: ", input_files_dir)
+  if (!file.exists(file.path(input_files_dir,"renf90.tables"))) stop("File 'renf90.tables' not found at: ", input_files_dir)
+  if (!file.exists(file.path(input_files_dir,"renf90.dat"))) stop("File 'renf90.dat' not found at: ", input_files_dir)
+
   if (!is.null(snp_file_name)) {
     if (!file.exists(snp_file_name)) {
       stop("Parameter file not found at:", snp_file_name)
       snp_file_name <- normalizePath(snp_file_name)
     }
   }
-  
+
   if(is.null(output_table_name)) stop("Define output table name.")
-  
+
+  if (!file.exists(renf90_ped_name)) {
+    stop("Parameter file not found at: ", renf90_ped_name)
+  }
+
   # set seed for reproducibility
   base::set.seed(seed)
 
-  input_files_dir <- normalizePath(input_files_dir)
-  
+
   # Checks
   if(file.exists(output_files_dir)){
     check_files <- list.files(output_files_dir)
@@ -81,23 +92,23 @@ bf90_cv <- function(missing_value_code = -999,
   } else {
     stop(paste("Directory", output_files_dir, "does not exist. Create it before running the function."))
   }
-  
+
   path_2_execs <- normalizePath(path_2_execs)
-  
+
   # Inform parameters and directories set
   if(verbose){
     cat("Parameters set:\n",
-        "  missing_value_code = -999\n", 
-        "  random_effect_col = 3\n", 
-        "  h2 = 0.5\n", 
-        "  num_runs = 5\n", 
+        "  missing_value_code = -999\n",
+        "  random_effect_col = 3\n",
+        "  h2 = 0.5\n",
+        "  num_runs = 5\n",
         "  num_folds = 10\n",
         "Directories:\n",
         "  input files:", input_files_dir, "\n",
         "  output files:", output_files_dir, "\n",
         "  executable files:", path_2_execs)
   }
-  
+
   # define working directory
   wd_path <- base::getwd()
 
@@ -117,7 +128,7 @@ bf90_cv <- function(missing_value_code = -999,
   output <- execute_command(command = command_predict, logfile = "run_predict.log")
 
   system(paste("mv run_blup.log bvs.dat bvs2.dat yhat_residual solutions", output_files_dir)) # Send results from input to output directory
-  
+
   # Prepare files for each BLUP run
   renf90 <- base::readLines(paste0("renf90.par"))
   #ped_file <- dirname(renf90_ped_name)
@@ -135,13 +146,13 @@ bf90_cv <- function(missing_value_code = -999,
 
   folds <- base::lapply(data_shuffled, function(x) create_folds(x, num_folds))
   mutated_data <- base::lapply(folds, function(f) mutate_folds(bf90_phenos, f, num_folds,missing_value_code))
-  
+
   setwd(output_files_dir)
   for (run in 1:num_runs) {
     for (fold in 1:num_folds) {
       dir_path <- base::sprintf("run%d/fold%d", run, fold)
-      create_cv_datasets(run, fold, mutated_data[[run]][[fold]], 
-                         dir_path, renf90, renf90_ped_name, 
+      create_cv_datasets(run, fold, mutated_data[[run]][[fold]],
+                         dir_path, renf90, renf90_ped_name,
                          input_files_dir, snp_file_name)
     }
   }
@@ -168,12 +179,12 @@ bf90_cv <- function(missing_value_code = -999,
 
       ebvs_for_cv_list[[fold]] <- ebvs_for_cv
       utils::write.table(ebvs_for_cv, file = base::sprintf("ebvs_for_cv_run%d_fold%d.dat", run, fold), row.names = FALSE, col.names = TRUE, quote = FALSE)
-      
+
     }
     ebvs_for_cv_runs[[base::sprintf("ebvs_for_cv_run%d", run)]] <- base::do.call(base::rbind, ebvs_for_cv_list)
   }
   base::setwd(output_files_dir)
-  
+
   # Calculate correlations and bias
   corrected_phenos <- utils::read.table(paste0(output_files_dir,"/yhat_residual"), header = FALSE) %>% dplyr::select(1, 2)
   raw_phenos <- utils::read.table(paste0(input_files_dir,"/renf90.dat")) %>% dplyr::select(4, 1)
