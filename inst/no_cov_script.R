@@ -9,7 +9,7 @@ path_2_execs = system.file("exec_mac",package = "BIGf90")
 ####    1) Process raw parameter file with renumf90    ####
 run_renum(path_2_execs,
           output_files_dir = "results",
-          raw_par_files = "weight22_ped22.par")
+          raw_par_file = "weight22_ped22.par")
 
 ####    2) Estimate  variance components with gibbsf90+ and postgibbsf90    ####
 
