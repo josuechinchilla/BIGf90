@@ -6,7 +6,7 @@
 \usage{
 run_renum(
   path_2_execs = ".",
-  raw_par_files = NULL,
+  raw_par_file = NULL,
   output_files_dir = "results",
   verbose = TRUE
 )
@@ -14,7 +14,7 @@ run_renum(
 \arguments{
 \item{path_2_execs}{path to a folder that holds the renumf90 executable. This field should be in quotes "".}
 
-\item{raw_par_files}{name of the .par file that will be processed.  This field should be in quotes "".}
+\item{raw_par_file}{name of the .par file that will be processed.  This field should be in quotes "".}
 
 \item{output_files_dir}{path to the folder to store the output files renadd03.ped renf90.dat renf90.fields renf90.inb renf90.par renf90.tables run_renum.log}
 
@@ -30,7 +30,7 @@ The outputs will be the standard output files produced by renumf90. A log file c
 \examples{
 
 \donttest{
- #run_renum(path_2_execs = "path/bf90_execs/", 
+ #run_renum(path_2_execs = "path/bf90_execs/",
  #input_files_dir = "weight_2022_no_cov_cv.par")
 }
 
