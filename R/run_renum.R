@@ -20,14 +20,16 @@
 #' @export
 run_renum <- function(path_2_execs = ".",
                       raw_par_file = NULL,
-                      output_files_dir = "results",
+                      output_files_dir = NULL,
                       verbose = TRUE) {
 
   # Checks
-  output_files_dir <- normalizePath(output_files_dir)
+  if(is.null(output_files_dir)) stop("Define a output directory in output_files_dir")
+
   if(file.exists(output_files_dir)){
     check_files <- list.files(output_files_dir)
     if(length(check_files) > 0) warning(paste("Directory", output_files_dir, "is not empty. Some files may be replaced."))
+    output_files_dir <- normalizePath(output_files_dir)
   } else {
     stop(paste("Directory '", output_files_dir, "' does not exist. Create it before running the function."))
   }
@@ -52,7 +54,7 @@ run_renum <- function(path_2_execs = ".",
   cur_dir <- getwd() # save working directory location
 
   # Construct the command
-  command_renum <- paste0(file.path(path_2_execs, renum)," ", raw_file)
+  command_renum <- paste0(file.path(path_2_execs, renum)," ", paste0("'",raw_file, "'"))
 
   # Check if executable and parameter files exist
   if (!file.exists(file.path(path_2_execs, renum))) {
