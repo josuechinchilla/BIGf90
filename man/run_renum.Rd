@@ -7,7 +7,7 @@
 run_renum(
   path_2_execs = ".",
   raw_par_file = NULL,
-  output_files_dir = "results",
+  output_files_dir = NULL,
   verbose = TRUE
 )
 }
