@@ -80,8 +80,14 @@ run_gibbs <- function(path_2_execs,
   # Run the command and log the output
   setwd(input_files_dir)
   output <- execute_command(command = command_gibbs, logfile = "run_gibbs.log")
-  if(output_files_dir != input_files_dir)
-    system(paste("mv last_solutions binary_final_solutions fort.99 gibbs_samples run_gibbs.log", output_files_dir))
+  if(output_files_dir != input_files_dir){
+    if (.Platform$OS.type == "unix") {
+      system(paste("mv last_solutions binary_final_solutions fort.99 gibbs_samples run_gibbs.log", output_files_dir))
+    } else if (.Platform$OS.type == "windows") {
+      files_res <- c("last_solutions", "binary_final_solutions", "fort.99", "gibbs_samples", "run_gibbs.log")
+      for(i in 1:length(files_res)) shell(paste("MOVE ", files_res[i], output_files_dir))
+    }
+  }
   
   # Remove the temporary file
   unlink(temp_input_file)

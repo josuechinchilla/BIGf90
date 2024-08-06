@@ -85,10 +85,10 @@ bf90_cv <- function(missing_value_code = -999,
 
 
   # Checks
+  output_files_dir <- normalizePath(output_files_dir)
   if(file.exists(output_files_dir)){
     check_files <- list.files(output_files_dir)
     if(length(check_files) > 0) warning(paste("Directory", output_files_dir, "is not empty. Some files may be replaced."))
-    output_files_dir <- normalizePath(output_files_dir)
   } else {
     stop(paste("Directory", output_files_dir, "does not exist. Create it before running the function."))
   }
@@ -127,7 +127,12 @@ bf90_cv <- function(missing_value_code = -999,
   command_predict <- paste0(file.path(path_2_execs, predict), " ", paste0("renf90.par"))
   output <- execute_command(command = command_predict, logfile = "run_predict.log")
 
-  system(paste("mv run_blup.log bvs.dat bvs2.dat yhat_residual solutions", output_files_dir)) # Send results from input to output directory
+  if (.Platform$OS.type == "unix") {
+    system(paste0("mv run_blup.log bvs.dat bvs2.dat yhat_residual solutions ", output_files_dir))
+  } else if (.Platform$OS.type == "windows") {
+    files_res <- c("run_blup.log", "bvs.dat", "bvs2.dat", "yhat_residual", "solutions")
+    for(i in 1:length(files_res)) shell(paste("MOVE ", files_res[i], output_files_dir))
+  }
 
   # Prepare files for each BLUP run
   renf90 <- base::readLines(paste0("renf90.par"))

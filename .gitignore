@@ -3,6 +3,7 @@
 .Rbuildignore
 BIGf90.Rproj
 inst/exec_mac
+inst/exec_windows/
 inst/data
 tests/
 .Rhistory

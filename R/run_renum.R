@@ -74,7 +74,12 @@ run_renum <- function(path_2_execs = ".",
   }
 
   # Move generated files to working directory
-  system(paste0("mv renadd03.ped renf90.dat renf90.fields renf90.inb renf90.par renf90.tables run_renum.log ", output_files_dir))
+  if (.Platform$OS.type == "unix") {
+    system(paste0("mv renadd03.ped renf90.dat renf90.fields renf90.inb renf90.par renf90.tables run_renum.log ", output_files_dir))
+  } else if (.Platform$OS.type == "windows") {
+    files_res <- c("renadd03.ped", "renf90.dat", "renf90.fields", "renf90.inb", "renf90.par" ,"renf90.tables", "run_renum.log")
+    for(i in 1:length(files_res)) shell(paste("MOVE ", files_res[i], output_files_dir))
+  }
 
   # Return to past working directory
   setwd(cur_dir)

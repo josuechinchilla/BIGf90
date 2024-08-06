@@ -3,14 +3,17 @@ set.seed(101919)
 library("BIGf90")
 setwd("~/Desktop/weight_length_2024/weight_2022phenos_2022ped/no_cov")
 #set path to executables
-path_2_execs = system.file(package = "BIGf90")
+path_2_execs = system.file("exec_windows",package = "BIGf90")
 
 ####    1) Process raw parameter file with renumf90    ####
-run_renum(path_2_execs, raw_par_file = "weight_2022_no_cov.par")
+run_renum(path_2_execs, 
+          output_files_dir = "results", 
+          raw_par_files = "data/weight_2022_no_cov.par")
 
 ####    2) Estimate  variance components with gibbsf90+ and postgibbsf90    ####
 
-run_gibbs(path_2_execs, input_files_dir = "results",
+run_gibbs(path_2_execs, 
+          input_files_dir = "results",
           gibbs_iter = 250000,
           gibbs_burn = 50000,
           gibbs_keep = 1)
