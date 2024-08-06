@@ -13,7 +13,7 @@
 #' @param gibbs_burn number of samples to be discarded at the begining of the Gibbs sampler
 #' @param gibbs_keep the interval to save samples (thinning). Entering a 1 means all samples are kept.
 #' @param verbose logical if TRUE prints log information
-#' 
+#'
 #' @examples
 #' ## Example
 #'
@@ -23,16 +23,16 @@
 #' # gibbs_keep = 1)
 #'
 #' @export
-run_gibbs <- function(path_2_execs, 
+run_gibbs <- function(path_2_execs,
                       input_files_dir = ".",
                       output_files_dir = input_files_dir,
-                      gibbs_iter = 250000, 
-                      gibbs_burn = 20000, 
-                      gibbs_keep = 1, 
+                      gibbs_iter = 250000,
+                      gibbs_burn = 20000,
+                      gibbs_keep = 1,
                       verbose = TRUE) {
-  
+
   if(input_files_dir != output_files_dir) warning("Next steps will required renum and gibbs results stored in same directory.")
-  
+
   # Checks
   if(file.exists(output_files_dir)){
     check_files <- list.files(output_files_dir)
@@ -40,10 +40,10 @@ run_gibbs <- function(path_2_execs,
   } else {
     stop(paste("Directory", output_files_dir, "does not exist. Create it before running the function."))
   }
-  
+
   path_2_execs <- normalizePath(path_2_execs)
   cur_dir <- getwd()
-  
+
   #Assign .exe or not based on OS
   if (.Platform$OS.type == "unix") {
     gibbs = "gibbsf90+"
@@ -56,13 +56,13 @@ run_gibbs <- function(path_2_execs,
   if (!file.exists(gibbs_exec)) {
     stop("Executable not found at: ", gibbs_exec)
   }
-  
+
   if (!file.exists(file.path(input_files_dir, "renf90.par"))) {
     stop("Parameter file not found: renf90.par")
   }
-  
+
   input_files_dir <- normalizePath(input_files_dir)
-  
+
   # Create a temporary file with the inputs
   temp_input_file <- tempfile()
   writeLines(c(file.path(input_files_dir,"renf90.par"), gibbs_iter, gibbs_burn, gibbs_keep), temp_input_file)
@@ -81,14 +81,10 @@ run_gibbs <- function(path_2_execs,
   setwd(input_files_dir)
   output <- execute_command(command = command_gibbs, logfile = "run_gibbs.log")
   if(output_files_dir != input_files_dir){
-    if (.Platform$OS.type == "unix") {
-      system(paste("mv last_solutions binary_final_solutions fort.99 gibbs_samples run_gibbs.log", output_files_dir))
-    } else if (.Platform$OS.type == "windows") {
-      files_res <- c("last_solutions", "binary_final_solutions", "fort.99", "gibbs_samples", "run_gibbs.log")
-      for(i in 1:length(files_res)) shell(paste("MOVE ", files_res[i], output_files_dir))
-    }
+    files_res <- c("last_solutions", "binary_final_solutions", "fort.99", "gibbs_samples", "run_gibbs.log")
+    for(i in 1:length(files_res)) file.rename(from = files_res[i], to = file.path(output_files_dir,files_res[i]))
   }
-  
+
   # Remove the temporary file
   unlink(temp_input_file)
 
