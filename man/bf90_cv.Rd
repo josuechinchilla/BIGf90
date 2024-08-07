@@ -5,16 +5,16 @@
 \title{Run K-fold cross-validation analysis (CVA)}
 \usage{
 bf90_cv(
-  missing_value_code = -999,
-  random_effect_col = 3,
-  h2 = 0.5,
-  num_runs = 5,
-  num_folds = 10,
+  missing_value_code = NULL,
+  random_effect_col = NULL,
+  h2 = NULL,
+  num_runs = NULL,
+  num_folds = NULL,
   path_2_execs = ".",
   input_files_dir = ".",
   output_files_dir = ".",
   output_table_name = NULL,
-  renf90_ped_name = "renadd03.ped",
+  renf90_ped_name = NULL,
   snp_file_name = NULL,
   seed = 101919,
   verbose = TRUE
