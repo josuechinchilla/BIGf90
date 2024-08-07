@@ -38,28 +38,36 @@
 #'
 #'
 #' @export
-bf90_cv <- function(missing_value_code = -999,
-                    random_effect_col = 3,
-                    h2 = 0.5,
-                    num_runs = 5,
-                    num_folds = 10,
+bf90_cv <- function(missing_value_code = NULL,
+                    random_effect_col = NULL,
+                    h2 = NULL,
+                    num_runs = NULL,
+                    num_folds = NULL,
                     path_2_execs = ".",
                     input_files_dir = ".",
                     output_files_dir = ".",
                     output_table_name = NULL,
-                    renf90_ped_name="renadd03.ped",
+                    renf90_ped_name= NULL,
                     snp_file_name = NULL,
                     seed = 101919,
                     verbose = TRUE) {
 
 
   #check id pedigree and genotype file are present
+  if(is.null(renf90_ped_name)) stop("Specify renf90_ped_name")
+
   if (!file.exists(renf90_ped_name)) {
     stop("Parameter file not found at: ", renf90_ped_name)
   }
   renf90_ped_name <- normalizePath(renf90_ped_name)
 
   input_files_dir <- normalizePath(input_files_dir)
+
+  if(is.null(missing_value_code)) stop("Specify missing_value_code")
+  if(is.null(random_effect_col)) stop("Specify random_effect_col")
+  if(is.null(h2)) stop("Specify h2")
+  if(is.null(num_runs)) stop("Specify num_runs")
+  if(is.null(num_folds)) stop("Specify num_folds")
 
   if (!file.exists(file.path(input_files_dir,"renf90.par"))) stop("File 'renf90.par' not found at: ", input_files_dir)
   if (!file.exists(file.path(input_files_dir,"renf90.inb"))) stop("File 'renf90.inb' not found at: ", input_files_dir)
@@ -83,7 +91,6 @@ bf90_cv <- function(missing_value_code = -999,
   # set seed for reproducibility
   base::set.seed(seed)
 
-
   # Checks
   output_files_dir <- normalizePath(output_files_dir)
   if(file.exists(output_files_dir)){
@@ -98,11 +105,11 @@ bf90_cv <- function(missing_value_code = -999,
   # Inform parameters and directories set
   if(verbose){
     cat("Parameters set:\n",
-        "  missing_value_code = -999\n",
-        "  random_effect_col = 3\n",
-        "  h2 = 0.5\n",
-        "  num_runs = 5\n",
-        "  num_folds = 10\n",
+        "  missing_value_code = ", missing_value_code,"\n",
+        "  random_effect_col = ", random_effect_col,"\n",
+        "  h2 = ",h2 ,"\n",
+        "  num_runs = ", num_runs,"\n",
+        "  num_folds =", num_folds,"\n",
         "Directories:\n",
         "  input files:", input_files_dir, "\n",
         "  output files:", output_files_dir, "\n",
