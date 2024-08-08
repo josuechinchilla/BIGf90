@@ -1,7 +1,7 @@
 .onLoad <- function(libname, pkgname){
   msg <- paste0("\nBIGf90 is a wrapper package for BLUPf90 family of programs, please use the following citations:\n\n",
  "BIGf90 Reference: \n",
-  "Chinchilla-Vargas J, Taniguti C, Sandercock A, Breeding Insight Team (2024). _BIGf90:
+  "Chinchilla-Vargas J, Taniguti C, Sandercock A, Breeding Insight Team (2024). BIGf90:
   Breeding Insight Genomics R front face to blupf90 modules. R package version 0.3.2,
   https://github.com/josuechinchilla/BIGf90 \n\n",
   "BLUPF90 Reference: \n",
