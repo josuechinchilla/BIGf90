@@ -1,7 +1,14 @@
 # BIGf90  
 #### (B)reeding (I)nsight (G)enomics f90
   
-An R front face to run blupf90 modules.
+BIGf90 is a wrapper package for BLUPf90 family of programs, please use the following citations:
+
+BIGf90 Reference:
+  Chinchilla-Vargas J, Taniguti C, Sandercock A, Breeding Insight Team (2024). BIGf90: Breeding Insight Genomics R front face to blupf90 modules. R package version 0.3.2, https://github.com/josuechinchilla/BIGf90
+  
+  BLUPF90 Reference:
+  Misztal, I., S. Tsuruta, D.A.L. Lourenco, I. Aguilar, A. Legarra, and Z. Vitezica. 2014. Manual for BLUPF90 family of programs: http://nce.ads.uga.edu/wiki/lib/exe/fetch.php?media=blupf90_all2.pdf")
+  
 #### Overview
 This package has functions to:
 * Process parameter files with Renumf90.
