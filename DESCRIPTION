@@ -1,6 +1,6 @@
 Package: BIGf90
 Title: R face front for running K-fold crossvalidation, estimating ebvs and variance component estimation with Blupf90 modules
-Version: 0.3.0
+Version: 0.3.2
 Authors@R: c(person("Josue", "Chinchilla-Vargas", role = c("aut", "cre"), email = "jc3635@cornell.edu"),
              person("Cristiane", "Taniguti", role = "aut"),
              person("Alexander", "Sandercock", role = "aut"),
