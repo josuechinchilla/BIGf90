@@ -1,7 +1,7 @@
 Package: BIGf90
 Title: R face front for running Kfold crossvalidation, estimating ebvs and variance component estimation with Blupf90 modules
 Version: 0.3.2
-Authors: Josue Chinchilla-Vargas, Cristiane H. Taniguti, Alexander Sandercock, Breeding Insight Team.
+Authors: Josue Chinchilla-Vargas, Cristiane H. Taniguti, Alexander M. Sandercock and Breeding Insight Team.
 Maintainer: Josue Chinchilla-Vargas <jc3635@cornell.edu>
 Description: This package provides R functions to run several BLUPf90 modules. Along with an R function to run K-fold crossvalidation for univariate analyses through blupf90+. 
     The output table from the K-fold crossvalidation function calculates accuracy as cor(y,ebv^) and cor(y*,ebv^) along with bias of ebvs calculated as reg(y,ebv.)
