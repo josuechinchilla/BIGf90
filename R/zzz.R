@@ -6,7 +6,10 @@
   https://github.com/josuechinchilla/BIGf90 \n\n",
   "BLUPF90 Reference: \n",
   "Misztal, I., S. Tsuruta, D.A.L. Lourenco, I. Aguilar, A. Legarra, and Z. Vitezica. 2014.\n",
-  "Manual for BLUPF90 family of programs: http://nce.ads.uga.edu/wiki/lib/exe/fetch.php?media=blupf90_all2.pdf")
+  "Manual for BLUPF90 family of programs: http://nce.ads.uga.edu/wiki/lib/exe/fetch.php?media=blupf90_all2.pdf \n\n",
+  "The BLUPF90 programs are free for research, but their use should be acknowledged in publications. For commercial use,
+please contact Ignacy Misztal (ignacy@uga.edu) or Daniela Lourenco (danilino@uga.edu). Provide your name, company, and purpose of use in the email."              
+               )
   
   packageStartupMessage(msg)
 }
