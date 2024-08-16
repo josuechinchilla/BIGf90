@@ -8,6 +8,9 @@ BIGf90 is a wrapper package for BLUPf90 family of programs, please use the follo
   
 #### BLUPF90 Reference:
   Misztal, I., S. Tsuruta, D.A.L. Lourenco, I. Aguilar, A. Legarra, and Z. Vitezica. 2014. Manual for BLUPF90 family of programs: http://nce.ads.uga.edu/wiki/lib/exe/fetch.php?media=blupf90_all2.pdf")
+
+*The BLUPF90 programs are free for research, but their use should be acknowledged in publications. For commercial use,
+please contact Ignacy Misztal (ignacy@uga.edu) or Daniela Lourenco (danilino@uga.edu). Provide your name, company, and purpose of use in the email.*   
   
 ### Overview
 This package has functions to:
