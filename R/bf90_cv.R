@@ -51,46 +51,46 @@ bf90_cv <- function(missing_value_code = NULL,
                     snp_file_name = NULL,
                     seed = 101919,
                     verbose = TRUE) {
-
-
+  
+  
   #check id pedigree and genotype file are present
   if(is.null(renf90_ped_name)) stop("Specify renf90_ped_name")
-
+  
   if (!file.exists(renf90_ped_name)) {
     stop("Parameter file not found at: ", renf90_ped_name)
   }
   renf90_ped_name <- normalizePath(renf90_ped_name)
-
+  
   input_files_dir <- normalizePath(input_files_dir)
-
+  
   if(is.null(missing_value_code)) stop("Specify missing_value_code")
   if(is.null(random_effect_col)) stop("Specify random_effect_col")
   if(is.null(h2)) stop("Specify h2")
   if(is.null(num_runs)) stop("Specify num_runs")
   if(is.null(num_folds)) stop("Specify num_folds")
-
+  
   if (!file.exists(file.path(input_files_dir,"renf90.par"))) stop("File 'renf90.par' not found at: ", input_files_dir)
   if (!file.exists(file.path(input_files_dir,"renf90.inb"))) stop("File 'renf90.inb' not found at: ", input_files_dir)
   if (!file.exists(file.path(input_files_dir,"renf90.fields"))) stop("File 'renf90.fields' not found at: ", input_files_dir)
   if (!file.exists(file.path(input_files_dir,"renf90.tables"))) stop("File 'renf90.tables' not found at: ", input_files_dir)
   if (!file.exists(file.path(input_files_dir,"renf90.dat"))) stop("File 'renf90.dat' not found at: ", input_files_dir)
-
+  
   if (!is.null(snp_file_name)) {
     if (!file.exists(snp_file_name)) {
       stop("Parameter file not found at:", snp_file_name)
       snp_file_name <- normalizePath(snp_file_name)
     }
   }
-
+  
   if(is.null(output_table_name)) stop("Define output table name.")
-
+  
   if (!file.exists(renf90_ped_name)) {
     stop("Parameter file not found at: ", renf90_ped_name)
   }
-
+  
   # set seed for reproducibility
   base::set.seed(seed)
-
+  
   # Checks
   output_files_dir <- normalizePath(output_files_dir)
   if(file.exists(output_files_dir)){
@@ -99,9 +99,9 @@ bf90_cv <- function(missing_value_code = NULL,
   } else {
     stop(paste("Directory", output_files_dir, "does not exist. Create it before running the function."))
   }
-
+  
   path_2_execs <- normalizePath(path_2_execs)
-
+  
   # Inform parameters and directories set
   if(verbose){
     cat("Parameters set:\n",
@@ -115,10 +115,10 @@ bf90_cv <- function(missing_value_code = NULL,
         "  output files:", output_files_dir, "\n",
         "  executable files:", path_2_execs)
   }
-
+  
   # define working directory
   wd_path <- base::getwd()
-
+  
   #Assign .exes or not based on OS
   if (.Platform$OS.type == "unix") {
     predict = "predictf90"
@@ -127,34 +127,34 @@ bf90_cv <- function(missing_value_code = NULL,
     predict = "predictf90.exe"
     blup = "blupf90+.exe"
   }
-
+  
   # Run BF90 programs for the whole dataset
   setwd(input_files_dir)
   output <- execute_command(command = paste0(file.path(path_2_execs, blup)," ", "renf90.par"), logfile = "run_blup.log")
   command_predict <- paste0(file.path(path_2_execs, predict), " ", paste0("renf90.par"))
   output <- execute_command(command = command_predict, logfile = "run_predict.log")
-
+  
   files_res <- c("run_blup.log", "bvs.dat", "bvs2.dat", "yhat_residual", "solutions")
   for(i in 1:length(files_res)) file.rename(from = files_res[i], to = file.path(output_files_dir,files_res[i]))
-
+  
   # Prepare files for each BLUP run
   renf90 <- base::readLines(paste0("renf90.par"))
   #ped_file <- dirname(renf90_ped_name)
   fields_file <- base::readLines(paste0("renf90.fields"))
   inb_file <- base::readLines(paste0("renf90.inb"))
   tables_file <- base::readLines(paste0("renf90.tables"))
-
+  
   # Read and preprocess the phenotype data
   bf90_phenos <- utils::read.table(paste0("renf90.dat"), sep = " ", header = FALSE) %>%
     dplyr::select(-1)
-
+  
   # Shuffle the data and create folds
   data_shuffled <- base::lapply(1:num_runs, function(x) bf90_phenos[base::sample(base::nrow(bf90_phenos)), ] %>%
                                   dplyr::select((random_effect_col + 1)))
-
+  
   folds <- base::lapply(data_shuffled, function(x) create_folds(x, num_folds))
   mutated_data <- base::lapply(folds, function(f) mutate_folds(bf90_phenos, f, num_folds,missing_value_code))
-
+  
   setwd(output_files_dir)
   for (run in 1:num_runs) {
     for (fold in 1:num_folds) {
@@ -164,7 +164,7 @@ bf90_cv <- function(missing_value_code = NULL,
                          input_files_dir, snp_file_name)
     }
   }
-
+  
   # Run BLUPf90+ for each fold and collect EBVs
   ebvs_for_cv_runs <- base::list()
   for (run in 1:num_runs) {
@@ -174,62 +174,98 @@ bf90_cv <- function(missing_value_code = NULL,
       command <- base::paste0(file.path(path_2_execs, blup), base::sprintf(" renf90_run%d_fold%d.par", run, fold))
       logfile <- base::sprintf("blup_fold%d_run%d.log", fold, run)
       execute_command(command = command, logfile = logfile)
-
+      
       data_file <- base::sprintf("renf90_run%d_fold%d.dat", run, fold)
       masked_ids <- utils::read.table(data_file) %>%
         dplyr::filter(V1 == missing_value_code) %>%
         dplyr::select(4) %>%
         base::unlist()
-
+      
       ebvs_for_cv <- utils::read.table("solutions", header = FALSE, skip = 1) %>%
         dplyr::filter(V2 == random_effect_col & V3 %in% masked_ids) %>%
         dplyr::select(3, 4)
-
+      
       ebvs_for_cv_list[[fold]] <- ebvs_for_cv
       utils::write.table(ebvs_for_cv, file = base::sprintf("ebvs_for_cv_run%d_fold%d.dat", run, fold), row.names = FALSE, col.names = TRUE, quote = FALSE)
-
+      
     }
     ebvs_for_cv_runs[[base::sprintf("ebvs_for_cv_run%d", run)]] <- base::do.call(base::rbind, ebvs_for_cv_list)
   }
   base::setwd(output_files_dir)
-
+  
   # Calculate correlations and bias
-  corrected_phenos <- utils::read.table(paste0(output_files_dir,"/yhat_residual"), header = FALSE) %>% dplyr::select(1, 2)
-  raw_phenos <- utils::read.table(paste0(input_files_dir,"/renf90.dat")) %>% dplyr::select(4, 1)
-
+  corrected_phenos <- utils::read.table(paste0(output_files_dir, "/yhat_residual"), header = FALSE) %>% dplyr::select(1, 2)
+  raw_phenos <- utils::read.table(paste0(input_files_dir, "/renf90.dat")) %>% dplyr::select(4, 1)
+  
   ystar_correlations <- base::numeric(num_runs)
-  yraw_correlations <- base::numeric(num_runs)
-  yraw_list <- base::vector("list", num_runs)
-  coefficients_list <- base::vector("list", num_runs)
   bias_list <- base::numeric(num_runs)
-
+  accuracy_list <- base::numeric(num_runs)
+  
   for (i in 1:num_runs) {
     ystar <- dplyr::inner_join(ebvs_for_cv_runs[[base::sprintf("ebvs_for_cv_run%d", i)]], corrected_phenos, by = c("V3" = "V1"))
-    ystar_correlations[i] <- stats::cor(ystar$V4, ystar$V2)
-
+    ystar_correlations[i] <- base::round(stats::cor(ystar$V4, ystar$V2), 3)
+    
     yraw <- dplyr::inner_join(ebvs_for_cv_runs[[base::sprintf("ebvs_for_cv_run%d", i)]], raw_phenos, by = c("V3" = "V4"))
-    yraw_correlations[i] <- stats::cor(yraw$V4, yraw$V1)
-    yraw_list[[i]] <- yraw
-
-    model <- stats::lm(V1 ~ V4, data = yraw_list[[i]])
-    coefficients_list[[i]] <- stats::coefficients(model)
-    bias_list[i] <- stats::coefficients(model)["V4"]
+    
+    model <- stats::lm(V1 ~ V4, data = yraw)
+    bias_list[i] <- base::round(stats::coefficients(model)["V4"], 3)
+    
+    accuracy_list[i] <- base::round(ystar_correlations[i] / base::sqrt(h2), 3)
   }
-
-  ystar_accuracy <- base::round(base::mean(ystar_correlations), 3)
-  yraw_average_corr <- base::round(base::mean(yraw_correlations), 3)
-  yraw_accuracy <- base::round(yraw_average_corr / base::sqrt(h2), 3)
-  average_bias <- base::round(base::mean(bias_list), 3)
-
-  data <- base::data.frame(
-    Metric = base::c(base::rep("y-ebv_correlations", num_runs), base::rep("y*-ebv_correlations", num_runs), base::rep("bias", num_runs), "y-ebv_average_corr", "y*-ebv_accuracy", "y_corrected_accuracy (yraw_average_corr/sqrt(h2)", "average_bias"),
-    Run = base::c(base::paste("run", 1:num_runs), base::paste("run", 1:num_runs), base::paste("run", 1:num_runs), "", "", "", ""),
-    Value = base::round(base::c(yraw_correlations, ystar_correlations, bias_list, yraw_average_corr, ystar_accuracy, yraw_accuracy, average_bias), 3)
+  
+  # Collecting results for verbose output
+  verbose_results <- data.frame(
+    Metric = rep(c("predictive ability", "bias", "accuracy"), each = num_runs),
+    Run = paste("Run", rep(1:num_runs, times = 3)),
+    Value = c(ystar_correlations, bias_list, accuracy_list)
   )
-  if(verbose) base::print (base::paste0("****Accuracy and bias table****" ))
-
-  utils::write.table(data, file = output_table_name, row.names = FALSE, quote = FALSE)
-
-  if(verbose) base::print(data)
+  
+  # Calculate averages
+  ystar_accuracy <- base::round(base::mean(ystar_correlations), 3)
+  y_corrected_accuracy <- base::round(ystar_accuracy / base::sqrt(h2), 3)
+  average_bias <- base::round(base::mean(bias_list), 3)
+  
+  # Create data frame with only the desired averaged metrics
+  summary_data <- base::data.frame(
+    Metric = c("predictive ability", "bias", "accuracy"),
+    Run = "Average",
+    Value = c(ystar_accuracy, average_bias, y_corrected_accuracy)
+  )
+  
+  # Open the output file for writing
+  output_file <- file(output_table_name, "w")
+  
+  # Write the parameters to the file
+  writeLines("***** Parameters used for CV Analysis *****", output_file)
+  writeLines(paste("  missing_value_code =", missing_value_code), output_file)
+  writeLines(paste("  random_effect_col =", random_effect_col), output_file)
+  writeLines(paste("  h2 =", h2), output_file)
+  writeLines(paste("  num_runs =", num_runs), output_file)
+  writeLines(paste("  num_folds =", num_folds), output_file)
+  
+  # Write section title and detailed per-run results
+  writeLines("\n***** Predictive Ability, Bias, and Accuracy Per Run *****", output_file)
+  utils::write.table(verbose_results, file = output_file, row.names = FALSE, quote = FALSE, append = TRUE)
+  
+  # Write section title and summary results
+  writeLines("\n***** Predictive Ability, Bias, and Accuracy Results (Averages) *****", output_file)
+  utils::write.table(summary_data, file = output_file, row.names = FALSE, quote = FALSE, append = TRUE)
+  
+  # Close the output file
+  close(output_file)
+  
+  # Print the results per run if verbose is TRUE
+  if (verbose) {
+    base::cat("\n*****Predictive Ability, Bias, and Accuracy Per Run*****\n")
+    print(verbose_results, row.names = FALSE)
+  }
+  
+  # Print out summarized results regardless of Verbose
+  base::cat("\n*****Predictive Ability, Bias, and Accuracy Results*****\n")
+  base::cat("predictive ability: ", ystar_accuracy, "\n", sep = "")
+  base::cat("bias: ", average_bias, "\n", sep = "")
+  base::cat("accuracy: ", y_corrected_accuracy, "\n", sep = "")
+  
+  # Set the working directory back to the original path
   setwd(wd_path)
 }
