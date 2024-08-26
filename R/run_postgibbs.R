@@ -27,8 +27,6 @@ run_postgibbs <- function(path_2_execs,
                           postgibbs_burn, 
                           postgibbs_keep, 
                           verbose = TRUE) {
-
-  if(input_files_dir != output_files_dir) warning("Next steps will required renum, gibbs, and postgibbs results stored in same directory.")
   
   # Checks
   if(file.exists(output_files_dir)){
