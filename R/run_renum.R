@@ -20,7 +20,6 @@
 #' @export
 run_renum <- function(path_2_execs = ".",
                       raw_par_file = NULL,
-                      snp_file_name = NULL,
                       output_files_dir = NULL,
                       verbose = TRUE) {
   
@@ -45,6 +44,40 @@ run_renum <- function(path_2_execs = ".",
     stop("Parameter file not found at: ", raw_file)
   }
   
+  #### Check par files ####
+  parfile <- base::readLines(raw_file)
+  
+  ## Check DATAFILE
+  datafile <- parfile[grep("DATAFILE", parfile) + 1]
+  if(length(datafile) == 0) stop(paste("DATAFILE was not defined in the parameter file", raw_file))
+  
+  # Check if file exist
+  if(!file.exists(datafile)) stop(paste("File:", datafile, "defined in the file", raw_file,"line", grep("DATAFILE", parfile) + 1,"does not exist."))
+  
+  ## Check pedfile
+  pedfile <- parfile[which(grepl("^FILE$", parfile) | grepl("^FILE ", parfile) | grepl("^FILE#", parfile)) + 1]
+  
+  if(length(pedfile) != 0){
+    # Check if file exist
+    if(!file.exists(pedfile)) stop(paste("File:", pedfile, "defined in the file", raw_file,"line", which(grepl("^FILE$", parfile) | grepl("^FILE ", parfile) | grepl("^FILE#", parfile)) + 1,"does not exist."))
+  } else pedfile <- "not defined"
+  
+  ## Check snpfile
+  snpfile <- parfile[grep("SNP_FILE", parfile) + 1]
+  
+  if(length(snpfile) != 0){
+    # Check if file exist
+    if(!file.exists(snpfile)) stop(paste("File:", snpfile, "defined in the file", raw_file,"line", grep("SNP_FILE", parfile) + 1, "does not exist."))
+  } else snpfile <- "not defined"
+  
+  if(verbose){
+    cat(paste("DATAFILE:", datafile, "\n"))
+    cat(paste("FILE (pedigree file):", pedfile, "\n"))
+    cat(paste("SNP_FILE:", snpfile, "\n"))
+  }
+  
+  #####
+  
   #Assign .exe or not based on OS
   if (.Platform$OS.type == "unix") {
     renum = "renumf90"
@@ -67,24 +100,32 @@ run_renum <- function(path_2_execs = ".",
   output <- execute_command(command = command_renum, logfile = "run_renum.log")
   
   # Capture and print the log file content
+  result <- readLines("run_renum.log")
+  
   if(verbose){
     if (file.exists("run_renum.log")) {
       cat("Log file content:\n")
-      cat(readLines("run_renum.log"), sep = "\n")
+      cat(result, sep = "\n")
     } else {
       cat("Log file not created.\n")
     }
   }
   
-  # Move generated files to working directory
-  files_res <- c("renadd03.ped", "renf90.dat", "renf90.fields", "renf90.inb", "renf90.par" ,"renf90.tables", "run_renum.log")
-  for(i in 1:length(files_res)) file.rename(from = files_res[i], to = file.path(output_files_dir,files_res[i]))
+  if(any(grepl("EFFECT: not found", result))) {
+    files_res <- c("run_renum.log")
+    file.rename(from = files_res, to = file.path(output_files_dir,files_res))
+    stop(paste("Effect not found. Check ",file.path(output_files_dir,files_res)))
+  } else {
+    # Move generated files to working directory
+    files_res <- c("renadd03.ped", "renf90.dat", "renf90.fields", "renf90.inb", "renf90.par" ,"renf90.tables", "run_renum.log")
+    for(i in 1:length(files_res)) file.rename(from = files_res[i], to = file.path(output_files_dir,files_res[i]))
+  }
   
   # copy snp file
-  if(!is.null(snp_file_name) & !file.exists(file.path(output_files_dir, basename(snp_file_name)))){
-    snp_file_name <- normalizePath(snp_file_name)
-    file.symlink(base::file.path(snp_file_name), base::file.path(output_files_dir, basename(snp_file_name)))
-    file.symlink(paste0(base::file.path(snp_file_name),"_XrefID"), base::file.path(output_files_dir, paste0(basename(snp_file_name), "_XrefID")))
+  if(snpfile != "not defined" & !file.exists(file.path(output_files_dir, basename(snpfile)))){
+    snpfile <- normalizePath(snpfile)
+    file.symlink(base::file.path(snpfile), base::file.path(output_files_dir, basename(snpfile)))
+    file.symlink(paste0(base::file.path(snpfile),"_XrefID"), base::file.path(output_files_dir, paste0(basename(snpfile), "_XrefID")))
   }
   
   # Return to past working directory
