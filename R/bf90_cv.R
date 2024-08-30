@@ -78,8 +78,8 @@ bf90_cv <- function(missing_value_code = NULL,
   if (!is.null(snp_file_name)) {
     if (!file.exists(snp_file_name)) {
       stop("Parameter file not found at:", snp_file_name)
-      snp_file_name <- normalizePath(snp_file_name)
     }
+    snp_file_name <- normalizePath(snp_file_name)
   }
   
   if(is.null(output_table_name)) stop("Define output table name.")
@@ -134,7 +134,14 @@ bf90_cv <- function(missing_value_code = NULL,
   command_predict <- paste0(file.path(path_2_execs, predict), " ", paste0("renf90.par"))
   output <- execute_command(command = command_predict, logfile = "run_predict.log")
   
-  files_res <- c("run_blup.log", "bvs.dat", "bvs2.dat", "yhat_residual", "solutions")
+  if(is.null(snp_file_name)){
+    files_res <- c("run_blup.log", "bvs.dat", "bvs2.dat", "yhat_residual", "solutions")
+  } else {
+    files_res <- c("run_blup.log", "bvs.dat", "bvs2.dat", "yhat_residual", "solutions", 
+                   "freqdata.count", "freqdata.count.after.clean", "Gen_call_rate", "Gen_conflicts",
+                   "run_predict.log", "sum2pq")
+  }
+  
   for(i in 1:length(files_res)) file.rename(from = files_res[i], to = file.path(output_files_dir,files_res[i]))
   
   # Prepare files for each BLUP run
@@ -159,9 +166,14 @@ bf90_cv <- function(missing_value_code = NULL,
   for (run in 1:num_runs) {
     for (fold in 1:num_folds) {
       dir_path <- base::sprintf("run%d/fold%d", run, fold)
-      create_cv_datasets(run, fold, mutated_data[[run]][[fold]],
-                         dir_path, renf90, renf90_ped_name,
-                         input_files_dir, snp_file_name)
+      create_cv_datasets(run, 
+                         fold, 
+                         data_frame =  mutated_data[[run]][[fold]],
+                         dir_path, 
+                         renf90, 
+                         renf90_ped_name,
+                         input_files_dir, 
+                         snp_file_name)
     }
   }
   
