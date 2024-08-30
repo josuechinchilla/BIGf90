@@ -117,7 +117,12 @@ run_renum <- function(path_2_execs = ".",
     stop(paste("Effect not found. Check ",file.path(output_files_dir,files_res)))
   } else {
     # Move generated files to working directory
-    files_res <- c("renadd03.ped", "renf90.dat", "renf90.fields", "renf90.inb", "renf90.par" ,"renf90.tables", "run_renum.log")
+    if (file.exists(file.path(output_files_dir,"renf90.inb"))) {
+      files_res <- c("renadd03.ped", "renf90.dat", "renf90.fields", "renf90.inb", "renf90.par", "renf90.tables", "run_renum.log")
+    } else {
+      files_res <- c("renadd03.ped", "renf90.dat", "renf90.fields", "renf90.par" ,"renf90.tables", "run_renum.log")
+    }
+    
     for(i in 1:length(files_res)) file.rename(from = files_res[i], to = file.path(output_files_dir,files_res[i]))
   }
   

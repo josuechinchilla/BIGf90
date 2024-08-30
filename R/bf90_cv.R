@@ -66,7 +66,6 @@ bf90_cv <- function(missing_value_code = NULL,
   if(is.null(num_folds)) stop("Specify num_folds")
   
   if (!file.exists(file.path(input_files_dir,"renf90.par"))) stop("File 'renf90.par' not found at: ", input_files_dir)
-  if (!file.exists(file.path(input_files_dir,"renf90.inb"))) stop("File 'renf90.inb' not found at: ", input_files_dir)
   if (!file.exists(file.path(input_files_dir,"renf90.fields"))) stop("File 'renf90.fields' not found at: ", input_files_dir)
   if (!file.exists(file.path(input_files_dir,"renf90.tables"))) stop("File 'renf90.tables' not found at: ", input_files_dir)
   if (!file.exists(file.path(input_files_dir,"renf90.dat"))) stop("File 'renf90.dat' not found at: ", input_files_dir)
@@ -145,7 +144,6 @@ bf90_cv <- function(missing_value_code = NULL,
   renf90 <- base::readLines(paste0("renf90.par"))
   #ped_file <- dirname(renf90_ped_name)
   fields_file <- base::readLines(paste0("renf90.fields"))
-  inb_file <- base::readLines(paste0("renf90.inb"))
   tables_file <- base::readLines(paste0("renf90.tables"))
   
   # Read and preprocess the phenotype data
