@@ -7,3 +7,4 @@ inst/exec_windows/
 inst/data
 tests/
 .Rhistory
+.RData
