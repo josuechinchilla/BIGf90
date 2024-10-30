@@ -9,5 +9,5 @@ bibentry(
   ),
   year     = "2024",
   note     = "R package version 0.3.2",
-  url      = "https://github.com/Breeding-Insight/BIGr"
+  url      = "https://github.com/Breeding-Insight/BIGf90"
 )
