@@ -8,6 +8,7 @@
 * Reproduces the sealice test .par files (pedigree and genomic)
 * Added a testthat suite covering write_par() and the create_folds() helper
 
+
 # BIGf90 0.3.1
 
 * Users now can have executable files, input files, and output files in different locations
