@@ -33,15 +33,15 @@ run_blup <- function(path_2_execs) {
   }
 
   # Check if executable exists
-  if (!file.exists(paste0(path_2_execs, blup))) {
-    stop("Executable not found at: ", paste0(path_2_execs, blup))
+  if (!file.exists(file.path(path_2_execs, blup))) {
+    stop("Executable not found at: ", file.path(path_2_execs, blup))
   }
   if (!file.exists("renf90.par")) {
     stop("Parameter file not found: renf90.par")
   }
 
   # Run the command
-  output <- execute_command(command = paste0(path_2_execs, blup, " renf90.par"), logfile = "run_blup.log")
+  output <- execute_command(command = paste0(file.path(path_2_execs, blup), " renf90.par"), logfile = "run_blup.log")
 
   # Capture and print the log file content
   if (file.exists("run_blup.log")) {

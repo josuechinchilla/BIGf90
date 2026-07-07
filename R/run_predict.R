@@ -35,15 +35,15 @@ run_predict <- function(path_2_execs) {
   }
 
   # Check if executable exists
-  if (!file.exists(paste0(path_2_execs, predict))) {
-    stop("Executable not found at: ", paste0(path_2_execs, predict))
+  if (!file.exists(file.path(path_2_execs, predict))) {
+    stop("Executable not found at: ", file.path(path_2_execs, predict))
   }
   if (!file.exists("renf90.par")) {
     stop("Parameter file not found: renf90.par")
   }
 
   # Construct the command
-  command_predict <- paste0(path_2_execs, predict, " renf90.par")
+  command_predict <- paste0(file.path(path_2_execs, predict), " renf90.par")
 
   # Run the command and log the output
   output <- execute_command(command = command_predict, logfile = "run_predict.log")

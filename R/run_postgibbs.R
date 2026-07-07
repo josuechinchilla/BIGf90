@@ -77,14 +77,20 @@ run_postgibbs <- function(path_2_execs,
   # Remove the temporary file
   unlink(temp_input_file)
 
+  # Move result files to output directory if different from input
+  if(output_files_dir != input_files_dir){
+    files_res <- c(base::list.files(pattern = "^post"), "run_postgibbs.log")
+    for(i in seq_along(files_res)) file.rename(from = files_res[i], to = file.path(output_files_dir, files_res[i]))
+  }
+
   # Debugging: Print the output
   if(verbose) cat("Command output:", output, "\n")
 
   # Capture and print the log file content
   if(verbose){
-    if (file.exists("run_postgibbs.log")) {
+    if (file.exists(file.path(output_files_dir,"run_postgibbs.log"))) {
       cat("Log file content:\n")
-      cat(readLines("run_postgibbs.log"), sep = "\n")
+      cat(readLines(file.path(output_files_dir,"run_postgibbs.log")), sep = "\n")
     } else {
       cat("Log file not created.\n")
     }
