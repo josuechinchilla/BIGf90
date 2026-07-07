@@ -81,6 +81,12 @@ bf90_cv <- function(missing_value_code = NULL,
                                                                            "line", snpfile, "does not exist."))
     snp_file_name <- normalizePath(file.path(input_files_dir, snp_file_name))
   } else snp_file_name <- NULL
+
+  # cleaned-SNP and saved G-inverse filenames (built once on the full data, reused per fold)
+  if(!is.null(snp_file_name)){
+    snp_base  <- base::basename(snp_file_name)      # e.g. sealice_match.geno
+    clean_snp <- base::paste0(snp_base, "_clean")   # produced by saveCleanSNPs
+  }
   
   pedfile <- grep(" FILE", parfile) + 1
   if(length(pedfile) != 0) {
@@ -126,25 +132,52 @@ bf90_cv <- function(missing_value_code = NULL,
   
   # Run BF90 programs for the whole dataset
   setwd(input_files_dir)
-  output <- execute_command(command = paste0(file.path(path_2_execs, blup)," ", "renf90.par"), logfile = "run_blup.log")
-  command_predict <- paste0(file.path(path_2_execs, predict), " ", paste0("renf90.par"))
+  # For genomic analyses, make sure the G-inverse (Gi) and cleaned SNPs are saved on
+  # this full-data run so every fold can reuse them (built once here).
+  blup_parfile <- "renf90.par"
+  if(!is.null(snp_file_name)){
+    blup_par <- base::readLines("renf90.par")
+    if(!any(base::grepl("saveGInverse",  blup_par))) blup_par <- c(blup_par, "OPTION saveGInverse")
+    if(!any(base::grepl("saveCleanSNPs", blup_par))) blup_par <- c(blup_par, "OPTION saveCleanSNPs")
+    base::writeLines(blup_par, "renf90_blup.par")
+    blup_parfile <- "renf90_blup.par"
+  }
+  output <- execute_command(command = paste0(file.path(path_2_execs, blup)," ", blup_parfile), logfile = "run_blup.log")
+
+  # predictf90 on a copy of renf90.par that adjusts the phenotype for all effects
+  # except the random (animal) effect -> yhat = corrected phenotype (y*)
+  predict_par <- c(base::readLines("renf90.par"), base::paste("OPTION include_effects", random_effect_col))
+  base::writeLines(predict_par, "renf90_predict.par")
+  command_predict <- paste0(file.path(path_2_execs, predict), " ", "renf90_predict.par")
   output <- execute_command(command = command_predict, logfile = "run_predict.log")
   
   if(is.null(snp_file_name)){
     files_res <- c("run_blup.log", "bvs.dat", "bvs2.dat", "yhat_residual", "solutions")
   } else {
-    files_res <- c("run_blup.log", "bvs.dat", "bvs2.dat", "yhat_residual", "solutions", 
+    files_res <- c("run_blup.log", "bvs.dat", "bvs2.dat", "yhat_residual", "solutions",
                    "freqdata.count", "freqdata.count.after.clean", "Gen_call_rate", "Gen_conflicts",
-                   "run_predict.log", "sum2pq")
+                   "run_predict.log", "sum2pq",
+                   "Gi", clean_snp, base::paste0(clean_snp, "_XrefID"))   # reused by every fold
   }
-  
-  for(i in 1:length(files_res)) file.rename(from = files_res[i], to = file.path(output_files_dir,files_res[i]))
+
+  for(i in 1:length(files_res)) if(file.exists(files_res[i])) file.rename(from = files_res[i], to = file.path(output_files_dir,files_res[i]))
   
   # Prepare files for each BLUP run
   renf90 <- base::readLines(paste0("renf90.par"))
   #ped_file <- dirname(renf90_ped_name)
   fields_file <- base::readLines(paste0("renf90.fields"))
   tables_file <- base::readLines(paste0("renf90.tables"))
+
+  # Genomic: point each fold at the G-inverse + cleaned SNPs built on the full data,
+  # so folds skip genotype QC and G construction (identical results, much faster).
+  if(!is.null(snp_file_name)){
+    renf90 <- base::gsub("saveGInverse",  "readGInverse",       renf90, fixed = TRUE)
+    renf90 <- base::gsub("saveCleanSNPs", "no_quality_control", renf90, fixed = TRUE)
+    if(!any(base::grepl("readGInverse",       renf90))) renf90 <- c(renf90, "OPTION readGInverse")
+    if(!any(base::grepl("no_quality_control", renf90))) renf90 <- c(renf90, "OPTION no_quality_control")
+    renf90 <- base::gsub(snp_base, clean_snp, renf90, fixed = TRUE)   # SNP_file -> cleaned set
+    reuse_files <- base::file.path(output_files_dir, c("Gi", clean_snp, base::paste0(clean_snp, "_XrefID")))
+  } else reuse_files <- NULL
   
   # Read and preprocess the phenotype data
   bf90_phenos <- utils::read.table(paste0("renf90.dat"), sep = " ", header = FALSE) %>%
@@ -155,7 +188,7 @@ bf90_cv <- function(missing_value_code = NULL,
                                   dplyr::select((random_effect_col + 1)))
   
   folds <- base::lapply(data_shuffled, function(x) create_folds(x, num_folds))
-  mutated_data <- base::lapply(folds, function(f) mutate_folds(bf90_phenos, f, num_folds,missing_value_code))
+  mutated_data <- base::lapply(folds, function(f) mutate_folds(bf90_phenos, f, num_folds, missing_value_code, random_effect_col + 1))  # id col = random_effect_col+1
   
   setwd(output_files_dir)
   for (run in 1:num_runs) {
@@ -167,8 +200,8 @@ bf90_cv <- function(missing_value_code = NULL,
                          dir_path, 
                          renf90, 
                          renf90_ped_name,
-                         input_files_dir, 
-                         snp_file_name)
+                         input_files_dir,
+                         reuse_files)
     }
   }
   
@@ -185,7 +218,7 @@ bf90_cv <- function(missing_value_code = NULL,
       data_file <- base::sprintf("renf90_run%d_fold%d.dat", run, fold)
       masked_ids <- utils::read.table(data_file) %>%
         dplyr::filter(V1 == missing_value_code) %>%
-        dplyr::select(4) %>%
+        dplyr::select(random_effect_col + 1) %>%   # id column
         base::unlist()
       
       ebvs_for_cv <- utils::read.table("solutions", header = FALSE, skip = 1) %>%
@@ -202,7 +235,6 @@ bf90_cv <- function(missing_value_code = NULL,
   
   # Calculate correlations and bias
   corrected_phenos <- utils::read.table(paste0(output_files_dir, "/yhat_residual"), header = FALSE) %>% dplyr::select(1, 2)
-  raw_phenos <- utils::read.table(paste0(input_files_dir, "/renf90.dat")) %>% dplyr::select(4, 1)
   
   ystar_correlations <- base::numeric(num_runs)
   bias_list <- base::numeric(num_runs)
@@ -212,9 +244,7 @@ bf90_cv <- function(missing_value_code = NULL,
     ystar <- dplyr::inner_join(ebvs_for_cv_runs[[base::sprintf("ebvs_for_cv_run%d", i)]], corrected_phenos, by = c("V3" = "V1"))
     ystar_correlations[i] <- base::round(stats::cor(ystar$V4, ystar$V2), 3)
     
-    yraw <- dplyr::inner_join(ebvs_for_cv_runs[[base::sprintf("ebvs_for_cv_run%d", i)]], raw_phenos, by = c("V3" = "V4"))
-    
-    model <- stats::lm(V1 ~ V4, data = yraw)
+    model <- stats::lm(V2 ~ V4, data = ystar)   # bias (LR b1): corrected phenotype (V2) regressed on EBV (V4)
     bias_list[i] <- base::round(stats::coefficients(model)["V4"], 3)
     
     accuracy_list[i] <- base::round(ystar_correlations[i] / base::sqrt(h2), 3)
