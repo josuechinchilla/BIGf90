@@ -2,19 +2,19 @@
 ## (B)reeding (I)nsight (G)enomics f90
 
 <!-- badges: start -->
-[![Development Status](https://img.shields.io/badge/status-active%20development-yellow)](https://github.com/josuechinchilla/BIGf90)
-[![R-CMD-check](https://github.com/josuechinchilla/BIGf90/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/josuechinchilla/BIGf90/actions/workflows/R-CMD-check.yaml)
+[![Development Status](https://img.shields.io/badge/status-active%20development-yellow)](https://github.com/Breeding-Insight/BIGf90)
+[![R-CMD-check](https://github.com/Breeding-Insight/BIGf90/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Breeding-Insight/BIGf90/actions/workflows/R-CMD-check.yaml)
 [![R](https://img.shields.io/badge/R-%3E%3D%204.3-blue)](https://www.r-project.org/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
-[![GitHub issues](https://img.shields.io/github/issues/josuechinchilla/BIGf90)](https://github.com/josuechinchilla/BIGf90/issues)
-[![GitHub pull requests](https://img.shields.io/github/issues-pr/josuechinchilla/BIGf90)](https://github.com/josuechinchilla/BIGf90/pulls)
-[![GitHub Release](https://img.shields.io/github/v/release/josuechinchilla/BIGf90?include_prereleases)](https://github.com/josuechinchilla/BIGf90/releases/latest)
+[![GitHub issues](https://img.shields.io/github/issues/Breeding-Insight/BIGf90)](https://github.com/Breeding-Insight/BIGf90/issues)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/Breeding-Insight/BIGf90)](https://github.com/Breeding-Insight/BIGf90/pulls)
+[![GitHub Release](https://img.shields.io/github/v/release/Breeding-Insight/BIGf90?include_prereleases)](https://github.com/Breeding-Insight/BIGf90/releases/latest)
 <!-- badges: end -->
   
 BIGf90 is a wrapper package for BLUPf90 family of programs, please use the following citations:
 
 #### BIGf90 Reference:
-  Chinchilla-Vargas J, Taniguti C, Sandercock A, Breeding Insight Team (2024). BIGf90: Breeding Insight Genomics R front face to blupf90 modules. R package version 0.4.0, https://github.com/josuechinchilla/BIGf90
+  Chinchilla-Vargas J, Taniguti C, Sandercock A, Breeding Insight Team (2024). BIGf90: Breeding Insight Genomics R front face to blupf90 modules. R package version 0.4.0, https://github.com/Breeding-Insight/BIGf90
   
 #### BLUPF90 Reference:
   Misztal, I., S. Tsuruta, D.A.L. Lourenco, I. Aguilar, A. Legarra, and Z. Vitezica. 2014. Manual for BLUPF90 family of programs: http://nce.ads.uga.edu/wiki/lib/exe/fetch.php?media=blupf90_all2.pdf")
@@ -37,5 +37,5 @@ When running on windows always run RStudio as administrator to avoid issues with
 ### To install package:  
 install.packages("devtools") #If not already installed   
 library(devtools)  
-devtools::install_github("josuechinchilla/BIGf90")  
+devtools::install_github("Breeding-Insight/BIGf90")  
 library("BIGf90")  
