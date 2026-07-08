@@ -152,6 +152,8 @@ write_par <- function(file = NULL,
     if(any(is.na(col)) || any(col < 1))
       stop(paste0("Effect '", nm, "': 'col' must be a positive integer (one per trait)."))
     if(length(col) == 1 && n_traits > 1) col <- rep(col, n_traits)             # same column across traits
+    if(length(col) != n_traits)
+      stop(paste0("Effect '", nm, "': give one column (recycled) or one per trait (", n_traits, ")."))
     cols[[nm]] <- col
     # match by col number (label-independent) or by name (alias); keep the first match
     if(!is.null(rnd) && is.null(rnd_nm) &&

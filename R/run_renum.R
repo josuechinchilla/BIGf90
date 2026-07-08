@@ -13,7 +13,8 @@
 #'
 #' \donttest{
 #'  #run_renum(path_2_execs = "path/bf90_execs/",
-#'  #input_files_dir = "weight_2022_no_cov_cv.par")
+#'  #          raw_par_file = "my_analysis.par",
+#'  #          output_files_dir = "results")
 #' }
 #'
 #'
@@ -52,14 +53,14 @@ run_renum <- function(path_2_execs = ".",
   if(length(datafile) == 0) stop(paste("DATAFILE was not defined in the parameter file", raw_file))
   
   # Check if file exist
-  if(!file.exists(datafile)) stop(paste("File:", datafile, "defined in the file", raw_file,"line", grep("DATAFILE", parfile) + 1,"does not exist."))
+  if(!file.exists(file.path(input_files_dir, datafile))) stop(paste("File:", datafile, "defined in the file", raw_file,"line", grep("DATAFILE", parfile) + 1,"does not exist."))
   
   ## Check pedfile
   pedfile <- parfile[which(grepl("^FILE$", parfile) | grepl("^FILE ", parfile) | grepl("^FILE#", parfile)) + 1]
   
   if(length(pedfile) != 0){
     # Check if file exist
-    if(!file.exists(pedfile)) stop(paste("File:", pedfile, "defined in the file", raw_file,"line", which(grepl("^FILE$", parfile) | grepl("^FILE ", parfile) | grepl("^FILE#", parfile)) + 1,"does not exist."))
+    if(!file.exists(file.path(input_files_dir, pedfile))) stop(paste("File:", pedfile, "defined in the file", raw_file,"line", which(grepl("^FILE$", parfile) | grepl("^FILE ", parfile) | grepl("^FILE#", parfile)) + 1,"does not exist."))
   } else pedfile <- "not defined"
   
   ## Check snpfile
@@ -67,7 +68,7 @@ run_renum <- function(path_2_execs = ".",
   
   if(length(snpfile) != 0){
     # Check if file exist
-    if(!file.exists(snpfile)) stop(paste("File:", snpfile, "defined in the file", raw_file,"line", grep("SNP_FILE", parfile) + 1, "does not exist."))
+    if(!file.exists(file.path(input_files_dir, snpfile))) stop(paste("File:", snpfile, "defined in the file", raw_file,"line", grep("SNP_FILE", parfile) + 1, "does not exist."))
   } else snpfile <- "not defined"
   
   if(verbose){
@@ -100,7 +101,7 @@ run_renum <- function(path_2_execs = ".",
   output <- execute_command(command = command_renum, logfile = "run_renum.log")
   
   # Capture and print the log file content
-  result <- readLines("run_renum.log")
+  result <- if(file.exists("run_renum.log")) readLines("run_renum.log") else character()
   
   if(verbose){
     if (file.exists("run_renum.log")) {
@@ -118,7 +119,7 @@ run_renum <- function(path_2_execs = ".",
   } else {
     # Move generated files to working directory
     renadd <- base::list.files(pattern = "^renadd[0-9]+\\.ped$")   # renumf90 names ped by effect position
-    if (file.exists(file.path(output_files_dir,"renf90.inb"))) {
+    if (file.exists("renf90.inb")) {   # renumf90 just wrote it in the current dir; files not moved yet
       files_res <- c(renadd, "renf90.dat", "renf90.fields", "renf90.inb", "renf90.par", "renf90.tables", "run_renum.log")
     } else {
       files_res <- c(renadd, "renf90.dat", "renf90.fields", "renf90.par" ,"renf90.tables", "run_renum.log")
