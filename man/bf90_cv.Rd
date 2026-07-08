@@ -50,7 +50,7 @@ This function runs a K-fold cross-validation analysis (CVA) using blupf90 module
 \details{
 This function sets up and runs a K-fold cross-validation analysis (CVA) using blupf90+ and predictf90.
 The function run_renumf90 needs to be used beforehand to process a .par file created by the user.
-This function calculates 2 accuracy estimates: correlation between raw phenotypes and ebvs divided by the square-root of narrow sense heritabilty and correlation between corrected phenotypes and ebvs along with bias estimations calculated as the regression of the phenotypes on the ebvs.
+Using the phenotype corrected for all fixed effects (y*), the function reports predictive ability as the correlation between y* and the ebvs, accuracy as that correlation divided by the square-root of the narrow-sense heritability, and bias as the regression of y* on the ebvs.
 }
 \examples{
 ## Example for a CVA with 5 independent runs dividing the data in 10 folds.
@@ -63,8 +63,8 @@ This function calculates 2 accuracy estimates: correlation between raw phenotype
 #      num_runs = 5,
 #      num_folds = 10,
 #      output_table_name = "example_run",
-#     renf90_ped_name = "renadd03.ped",
-#     snp_file_name = "my_genos.geno" )
+#      input_files_dir = ".",
+#      output_files_dir = ".")
 
 
 }

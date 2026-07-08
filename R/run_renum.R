@@ -59,6 +59,7 @@ run_renum <- function(path_2_execs = ".",
   pedfile <- parfile[which(grepl("^FILE$", parfile) | grepl("^FILE ", parfile) | grepl("^FILE#", parfile)) + 1]
   
   if(length(pedfile) != 0){
+    pedfile <- pedfile[1]   # first match only -> scalar (avoids length>1 in conditions)
     # Check if file exist
     if(!file.exists(file.path(input_files_dir, pedfile))) stop(paste("File:", pedfile, "defined in the file", raw_file,"line", which(grepl("^FILE$", parfile) | grepl("^FILE ", parfile) | grepl("^FILE#", parfile)) + 1,"does not exist."))
   } else pedfile <- "not defined"
@@ -67,6 +68,7 @@ run_renum <- function(path_2_execs = ".",
   snpfile <- parfile[grep("SNP_FILE", parfile) + 1]
   
   if(length(snpfile) != 0){
+    snpfile <- snpfile[1]   # first match only -> scalar (avoids length>1 in conditions)
     # Check if file exist
     if(!file.exists(file.path(input_files_dir, snpfile))) stop(paste("File:", snpfile, "defined in the file", raw_file,"line", grep("SNP_FILE", parfile) + 1, "does not exist."))
   } else snpfile <- "not defined"
@@ -129,7 +131,7 @@ run_renum <- function(path_2_execs = ".",
   }
   
   # copy snp file
-  if(snpfile != "not defined" & !file.exists(file.path(output_files_dir, basename(snpfile)))){
+  if(snpfile != "not defined" && !file.exists(file.path(output_files_dir, basename(snpfile)))){
     snpfile <- normalizePath(snpfile)
     file.symlink(base::file.path(snpfile), base::file.path(output_files_dir, basename(snpfile)))
     file.symlink(paste0(base::file.path(snpfile),"_XrefID"), base::file.path(output_files_dir, paste0(basename(snpfile), "_XrefID")))
