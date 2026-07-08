@@ -31,7 +31,8 @@ The outputs will be the standard output files produced by renumf90. A log file c
 
 \donttest{
  #run_renum(path_2_execs = "path/bf90_execs/",
- #input_files_dir = "weight_2022_no_cov_cv.par")
+ #          raw_par_file = "my_analysis.par",
+ #          output_files_dir = "results")
 }
 
 

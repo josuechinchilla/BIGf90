@@ -1,4 +1,15 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
-.github
-BIGf90_0.3.0.pdf
+^\.github$
+^\.git$
+^\.gitignore$
+^\.Rhistory$
+^\.RData$
+^\.DS_Store$
+^.*\.DS_Store$
+^BIGf90.*\.pdf$
+^inst/software
+^inst/exec_mac
+^inst/exec_windows
+^inst/data
+^inst/test_data_salmon

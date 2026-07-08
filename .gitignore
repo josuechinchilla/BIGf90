@@ -1,9 +1,21 @@
-.DS_store
-.Rproj.user
-.Rbuildignore
-BIGf90.Rproj
-inst/exec_mac
-inst/exec_windows/
-inst/data
-tests/
+# ---- OS / editor cruft ----
+.DS_Store
+**/.DS_Store
 .Rhistory
+.RData
+.Rproj.user
+
+# ---- RStudio project file ----
+BIGf90.Rproj
+
+# ---- Bundled BLUPf90 executables: keep locally, never push (platform-specific, ~165 MB) ----
+inst/software/
+inst/exec_mac/
+inst/exec_windows/
+inst/data/
+
+# ---- CVA/validation run outputs & local test data: keep locally, never push (~427 MB) ----
+inst/test_data_salmon/
+
+# NOTE: .Rbuildignore and tests/ are intentionally NOT ignored so they stay tracked
+#       (.Rbuildignore controls the built package; tests/ will hold testthat unit tests).
