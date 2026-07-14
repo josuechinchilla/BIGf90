@@ -1,0 +1,215 @@
+---
+title: "BIGf90 Tutorial"
+subtitle: "Variance components, breeding values, and cross-validation with the BLUPf90 programs"
+author: "Breeding Insight - Josue Chinchilla-Vargas"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    theme: flatly
+    highlight: tango
+    css: BIcolors_template.css
+    includes:
+      in_header: header.html
+    toc: true
+    toc_depth: 3
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+    number_sections: true
+    code_folding: show
+    df_print: paged
+vignette: >
+  %\VignetteIndexEntry{BIGf90 Tutorial}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  eval = FALSE,          # steps call the external BLUPf90 programs, so code is shown but not run
+  message = FALSE,
+  warning = FALSE,
+  fig.align = "center"
+)
+```
+
+# Introduction
+
+BIGf90 is an R package developed by [Breeding Insight](https://breedinginsight.org/)
+that wraps the [BLUPf90 family of programs](http://nce.ads.uga.edu/wiki/doku.php)
+for genetic evaluation. This tutorial walks through a full analysis:
+
+* `write_par()` &mdash; build the RENUMF90 parameter file from R.
+* `run_renum()` &mdash; renumber the model with RENUMF90.
+* `run_gibbs()` / `run_postgibbs()` &mdash; estimate variance components.
+* `run_blup()` / `clean_ebvs()` &mdash; compute (genomic) breeding values.
+* `bf90_cv()` &mdash; K-fold cross-validation (predictive ability, bias, accuracy).
+
+The same pipeline runs with or without genotypes (GBLUP/ssGBLUP vs pedigree BLUP).
+Because these functions call the external BLUPf90 executables, the code below is
+shown but not executed when the vignette is built &mdash; run it locally with the
+programs installed.
+
+## Install
+
+```{r}
+install.packages("remotes")
+remotes::install_github("Breeding-Insight/BIGf90", dependencies = TRUE)
+library(BIGf90)
+```
+
+# What you need
+
+* The BLUPf90 executables (`renumf90`, `blupf90+`, `predictf90`, `gibbsf90+`,
+  `postgibbsf90`) in one folder &mdash; download from the
+  [BLUPF90 wiki](http://nce.ads.uga.edu/wiki/doku.php).
+* A phenotype file, a pedigree file, and (optionally) a genotype/SNP file.
+
+# Setup
+
+```{r}
+library(BIGf90)
+
+path_2_execs <- "/path/to/blupf90/executables/"   # folder with the BLUPf90 programs
+base_dir     <- "/path/to/your/analysis"          # your data + parameter files
+setwd(base_dir)
+
+animal_effect <- 3       # animal effect's NUMBER in the model (for clean_ebvs / bf90_cv)
+h2            <- 0.3     # narrow-sense heritability estimate (for CV accuracy)
+missing_code  <- -999    # missing-phenotype code
+```
+
+Two "animal" indices, easy to mix up: in `write_par()` below, `random` is the animal
+effect's **column in the data file**; in `clean_ebvs()`/`bf90_cv()`, `random_effect_col`
+is its **number in the model**. Usually different values.
+
+# Prepare genotypes (optional)
+
+For a genomic model you need a BLUPf90 genotype file: each line is the animal ID
+followed by a contiguous string of one 0/1/2 dosage per SNP. If you are starting
+from PLINK, `write_geno()` builds it directly from a `.ped`. By default it reads
+the `--recode12` layout (two allele codes per locus) and collapses each pair to a
+dosage (1 1 &rarr; 0, 1 2 &rarr; 1, 2 2 &rarr; 2, and any `0` &rarr; missing),
+replacing the usual `cut`/`tr`/`sed` reformatting. Skip this step if you already
+have a `.geno` file or are running a pedigree-only model.
+
+```{r}
+write_geno(
+  ped  = "mydata.ped",     # PLINK --recode12 output (no header, 6 lead columns)
+  file = "genotypes.geno", # BLUPf90 genotype file to create
+  map  = "mydata.map",     # optional: checks the locus count matches
+  id_col = 2               # column with the animal ID (1 = FID, 2 = IID)
+)
+```
+
+# Build the parameter file
+
+`renumf90` needs a parameter file describing the model. Build it from R (or write it
+by hand). Omit `snp_file` and the genomic `OPTION`s for a pedigree-only model.
+
+```{r}
+write_par(
+  file     = "model.par",
+  datafile = "phenotypes.txt",
+  traits   = 4,                          # column of the trait in the data file
+  residual_variance = 0.15,
+  effects  = list(
+    mean   = list(col = 2, type = "cross", class = "numer"),
+    fixed1 = list(col = 3, type = "cross", class = "numer"),
+    animal = list(col = 1, type = "cross", class = "alpha")   # the animal effect
+  ),
+  random        = 1,                     # animal effect's column in the data file
+  random_type   = "animal",
+  pedigree_file = "pedigree.ped",
+  snp_file      = "genotypes.geno",      # omit for a pedigree-only model
+  missing_value = missing_code,
+  options = c("callrate 0.9", "minfreq 0.05", "monomorphic 1",
+              "saveGInverse", "saveCleanSNPs")
+)
+```
+
+# Renumber the model
+
+```{r}
+prep_renum <- function(par_file, out_dir) {
+  dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+  run_renum(path_2_execs, raw_par_file = file.path(base_dir, par_file),
+            output_files_dir = out_dir, verbose = FALSE)
+  inb <- file.path(base_dir, "renf90.inb")
+  if (file.exists(inb)) file.rename(inb, file.path(out_dir, "renf90.inb"))
+}
+
+out <- file.path(base_dir, "renumbered")
+prep_renum("model.par", out)
+```
+
+# Variance components
+
+```{r}
+run_gibbs(path_2_execs, input_files_dir = out, output_files_dir = out,
+          gibbs_iter = 100000, gibbs_burn = 20000, gibbs_keep = 10, verbose = FALSE)
+run_postgibbs(path_2_execs, input_files_dir = out,
+              postgibbs_burn = 1, postgibbs_keep = 1, verbose = FALSE)
+```
+
+# Breeding values
+
+```{r}
+setwd(out)                 # run_blup / clean_ebvs operate on the current folder
+run_blup(path_2_execs)
+clean_ebvs(random_effect_col = animal_effect,
+           solutions_output_name = "ebvs_clean.txt")
+setwd(base_dir)
+```
+
+`ebvs_clean.txt` holds the (G)EBVs keyed back to the original animal IDs.
+
+# Cross-validation
+
+```{r}
+set.seed(101919)   # repeatable folds
+bf90_cv(path_2_execs,
+        missing_value_code = missing_code,
+        random_effect_col  = animal_effect,
+        h2                 = h2,
+        num_runs           = 10,     # independent CV replicates
+        num_folds          = 5,      # folds per replicate
+        input_files_dir    = out,
+        output_files_dir   = out,
+        output_table_name  = "cv_results.txt",
+        verbose            = FALSE)
+```
+
+`cv_results.txt` reports, using the phenotype corrected for fixed effects (y\*):
+**predictive ability** = cor(y\*, êbv), **bias** = the slope of the regression of
+y\* on êbv (1 = unbiased), and **accuracy** = predictive ability / √h².
+
+# Genomic vs pedigree-only
+
+Run the pipeline twice into separate folders to compare:
+
+* **Genomic:** keep `snp_file` + `saveGInverse`/`saveCleanSNPs` in the `.par`.
+* **Pedigree-only:** drop `snp_file` and the genomic `OPTION`s.
+
+Then compare the `cv_results.txt` / `ebvs_clean.txt` between the two.
+
+# Session information
+
+```{r, eval=TRUE}
+sessionInfo()
+```
+
+# How to cite
+
+If you use BIGf90 in research, run `citation("BIGf90")` for the current reference,
+and cite the BLUPf90 programs (Misztal et al. 2014).
+
+```{r, eval=TRUE}
+citation("BIGf90")
+```
+
+# Acknowledgments
+
+Developed as part of the [Breeding Insight](https://www.breedinginsight.org)
+initiative to provide open-source, data-driven tools for modern breeding programs.
