@@ -2,7 +2,7 @@
 
 * New function write_geno() to build a BLUPf90 genotype (.geno) file from a PLINK .ped
 * Reads the --recode12 layout (two allele codes per locus) and collapses each pair to a 0/1/2 dosage (count of count_allele), writing a missing allele as missing_code (default 5); set alleles_per_locus = 1 for input that is already one dosage per locus
-* Writes the renumf90-ready contiguous format (ID left-justified, dosages column-aligned), with an optional .map locus-count check and an optional BLUPf90 marker-map output
+* Writes each line as the ID left-justified to a fixed width then the contiguous dosage string, so every row's genotypes start at the same column (BLUPf90 fixed format); optional .map locus-count check and optional BLUPf90 marker-map output
 * Added a testthat suite covering write_geno()
 
 

@@ -1,16 +1,17 @@
-#' Write a BLUPf90 genotype (.geno) file from a PLINK .ped
+#' Build a BLUPf90 genotype (.geno) file from a PLINK .ped
 #'
 #' Converts a PLINK \code{.ped} into the genotype file that the BLUPf90 programs
-#' read: each line is the animal ID, left-justified in a fixed-width field,
-#' followed by a contiguous string of one 0/1/2 allele-dosage per SNP (missing
-#' written as \code{missing_code}, default 5).
+#' read: each line is the animal ID, left-justified in a fixed-width field, then a
+#' contiguous string of one 0/1/2 allele-dosage per SNP (missing written as
+#' \code{missing_code}, default 5). It does the same recoding as the usual
+#' cut/tr/sed/paste pipeline, but pads the ID so every row's genotypes start at the
+#' same column, as BLUPf90 requires (fixed format).
 #'
 #' By default the input is the \code{--recode12} layout, with TWO allele codes
-#' (1/2, and 0 for a missing allele) per locus; each pair is collapsed to a
-#' dosage equal to the count of \code{count_allele} (so 1 1 -> 0, 1 2 -> 1,
-#' 2 2 -> 2, and any 0 -> missing). This reproduces the usual
-#' cut/tr/sed pipeline in a single call. Set \code{alleles_per_locus = 1} if the
-#' genotypes are already one 0/1/2 dosage per locus.
+#' (1/2, and 0 for a missing allele) per locus; each pair is collapsed to a dosage
+#' equal to the count of \code{count_allele} (so 1 1 -> 0, 1 2 -> 1, 2 2 -> 2, and
+#' any 0 -> missing). Set \code{alleles_per_locus = 1} if the genotypes are already
+#' one 0/1/2 dosage per locus.
 #'
 #' The \code{.ped} must have NO header: a set of leading, non-genotype columns
 #' (the six PLINK columns FID IID PAT MAT SEX PHENOTYPE, by default) followed by
@@ -40,7 +41,7 @@
 #'   are written as \code{missing_code}. Defaults to NA.
 #' @param missing_code code written for missing genotypes. Defaults to 5 (BLUPf90).
 #' @param id_width fixed width for the left-justified ID field. Defaults to the
-#'   longest ID + 1, so the dosage strings stay column-aligned.
+#'   longest ID + 1, so every row's dosage string starts at the same column.
 #' @param overwrite logical; if FALSE (default) the function stops when \code{file}
 #'   already exists.
 #'
@@ -49,24 +50,24 @@
 #'
 #' \donttest{
 #'  # PLINK --recode12 ped (6 lead cols, two allele codes per locus, ID in col 2):
-#'  # write_geno(ped  = "YP_merged.ped",
-#'  #            file = "YP_merged.geno",
-#'  #            map  = "YP_merged.map")   # optional locus-count check
+#'  # write_geno(ped  = "ped012.ped",
+#'  #           file = "bf90_geno.txt",
+#'  #           map  = "ped012.map")   # optional locus-count check
 #' }
 #'
 #' @export
 write_geno <- function(ped = NULL,
-                       file = NULL,
-                       map = NULL,
-                       map_out = NULL,
-                       id_col = 2,
-                       n_lead_cols = 6,
-                       alleles_per_locus = 2,
-                       count_allele = 2,
-                       missing = NA,
-                       missing_code = 5,
-                       id_width = NULL,
-                       overwrite = FALSE) {
+                      file = NULL,
+                      map = NULL,
+                      map_out = NULL,
+                      id_col = 2,
+                      n_lead_cols = 6,
+                      alleles_per_locus = 2,
+                      count_allele = 2,
+                      missing = NA,
+                      missing_code = 5,
+                      id_width = NULL,
+                      overwrite = FALSE) {
 
   # Checks
   if(is.null(ped))  stop("Define the input .ped file in 'ped'.")
@@ -130,7 +131,8 @@ write_geno <- function(ped = NULL,
                   nrow(map_tab), " marker(s) in 'map'. Check 'n_lead_cols'/'alleles_per_locus'."))
   }
 
-  # One contiguous dosage string per animal, ID left-justified to a fixed width
+  # One contiguous dosage string per animal, ID left-justified to a fixed width so
+  # every row's genotypes start at the same column (BLUPf90 fixed-format requirement)
   geno_str <- apply(geno, 1, paste0, collapse = "")
   if(is.null(id_width)) id_width <- max(nchar(ids)) + 1
   lines <- paste0(formatC(ids, flag = "-", width = id_width), geno_str)

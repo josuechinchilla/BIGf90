@@ -13,3 +13,4 @@
 ^inst/exec_windows
 ^inst/data
 ^inst/test_data_salmon
+^dev$

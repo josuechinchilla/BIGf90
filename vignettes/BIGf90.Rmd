@@ -96,9 +96,9 @@ have a `.geno` file or are running a pedigree-only model.
 
 ```{r}
 write_geno(
-  ped  = "mydata.ped",     # PLINK --recode12 output (no header, 6 lead columns)
-  file = "genotypes.geno", # BLUPf90 genotype file to create
-  map  = "mydata.map",     # optional: checks the locus count matches
+  ped  = "ped012.ped",     # PLINK --recode12 output (no header, 6 lead columns)
+  file = "bf90_geno.txt",  # BLUPf90 genotype file to create
+  map  = "ped012.map",     # optional: checks the locus count matches
   id_col = 2               # column with the animal ID (1 = FID, 2 = IID)
 )
 ```
