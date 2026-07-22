@@ -26,6 +26,9 @@ run_postgibbs(
 
 \item{verbose}{logical if TRUE prints log information in the console}
 }
+\value{
+No return value, called for side effects: runs postgibbsf90, producing the posterior mean/SD and convergence-diagnostic files and the run_postgibbs.log log file.
+}
 \description{
 This function runs postgibbsf90 using the renf90.par file used to run gibbsf90+
 }

@@ -7,6 +7,8 @@
 #' The output files are be the standard output files produced by predictf90. A log file called run_predict.log is also produced.
 #'
 #' @param path_2_execs path to a folder that holds the renumf90 executable. This field should be in quotes "".
+#'
+#' @return No return value, called for side effects: runs predictf90, producing the yhat_residual file (adjusted phenotypes and residuals) and the run_predict.log log file.
 #' @examples
 #' ## Example
 #'

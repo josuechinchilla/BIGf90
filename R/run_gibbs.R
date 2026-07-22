@@ -14,6 +14,8 @@
 #' @param gibbs_keep the interval to save samples (thinning). Entering a 1 means all samples are kept.
 #' @param verbose logical if TRUE prints log information
 #'
+#' @return No return value, called for side effects: runs gibbsf90+, producing the MCMC posterior-sample files (e.g. last_solutions, gibbs_samples, fort.99) and the run_gibbs.log log file.
+#'
 #' @examples
 #' ## Example
 #'

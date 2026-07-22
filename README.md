@@ -25,9 +25,13 @@ It provides functions to:
 * Build a BLUPf90 genotype (`.geno`) file from a PLINK `.ped` with `write_geno()`.
 * Process parameter files with RENUMF90 (`run_renum()`).
 * Calculate EBVs through BLUP, GBLUP, and ssGBLUP with `blupf90+` (`run_blup()`, `clean_ebvs()`).
+* Build/invert the genomic relationship matrix (`preGSf90`) and back-solve SNP effects for ssGWAS (`postGSf90`) with `run_pregs()` and `run_postgs()`.
+* Predict direct genomic values (DGV) for new genotyped animals with `predf90` (`run_predf()`).
+* Run a full weighted single-step GWAS (wssGBLUP) end-to-end (renumber &rarr; genomic QC &rarr; iterated evaluation + SNP effects) with `run_gwas()`.
+* Estimate heritability from the Gibbs variance components with `calc_h2()`.
 * Calculate adjusted phenotypes with `predictf90` (`run_predict()`).
 * Estimate variance components with `gibbsf90+` / `postgibbsf90` (`run_gibbs()`, `run_postgibbs()`).
-* Run K-fold cross-validation of predictions with `bf90_cv()`.
+* Run K-fold cross-validation of predictions with `run_cva()`.
 
 ### Installation
 

@@ -12,7 +12,9 @@
 #' @param postgibbs_burn number of samples to be discarded at the begining of the Gibbs sampler
 #' @param postgibbs_keep the interval to save samples (thinning). Entering a 1 means all samples are kept.#'
 #' @param verbose logical if TRUE prints log information in the console
-#' 
+#'
+#' @return No return value, called for side effects: runs postgibbsf90, producing the posterior mean/SD and convergence-diagnostic files and the run_postgibbs.log log file.
+#'
 #' @examples
 #' ## Example
 #'

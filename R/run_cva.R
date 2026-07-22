@@ -11,6 +11,7 @@
 #' @param h2 estimate of narrow-sense heritabilty.This value is use to calculate accuracy of ebvs
 #' @param num_runs Number of independent cross-validation runs to be performed.
 #' @param num_folds Number of folds to be generated within each independent run.
+#' @param genotyped_only logical (default FALSE); only relevant for genomic runs (a SNP_file in the parameter file). When FALSE (the default, matching the reference complete-data CVA), all phenotyped animals are used for TRAINING and G is built on all genotyped animals, but only genotyped animals are TESTED (placed in the CV folds). When TRUE, the analysis is restricted to animals that have BOTH a genotype and a phenotype: phenotyped-only records are dropped from training and genotyped-only animals are removed from the genotype file, so G is built on the intersection. Ignored for pedigree-only runs.
 #' @param output_table_name Name of the final tab-separated out-up file. This field should be in quotes "".
 #' @param path_2_execs path to a folder that holds all blupf90 executables that ill be used (blupf90+,predictf90). This field should be in quotes "".
 #' @param input_files_dir directory containing files renf90.par renf90.fields renf90.inb renf90.tables renf90.dat
@@ -24,7 +25,7 @@
 #' ## Example for a CVA with 5 independent runs dividing the data in 10 folds.
 #'
 #'
-#' # bf90_cv(path_2_execs = "/Users/johndoe/Desktop/bf90_execs/",
+#' # run_cva(path_2_execs = "/Users/johndoe/Desktop/bf90_execs/",
 #' #      missing_value_code = -999,
 #' #      random_effect_col= 3,
 #' #      h2 = 0.5,
@@ -36,7 +37,7 @@
 #'
 #'
 #' @export
-bf90_cv <- function(missing_value_code = NULL,
+run_cva <- function(missing_value_code = NULL,
                     random_effect_col = NULL,
                     h2 = NULL,
                     num_runs = NULL,
@@ -45,6 +46,7 @@ bf90_cv <- function(missing_value_code = NULL,
                     input_files_dir = ".",
                     output_files_dir = ".",
                     output_table_name = NULL,
+                    genotyped_only = FALSE,
                     seed = 101919,
                     verbose = TRUE) {
   
@@ -120,6 +122,7 @@ bf90_cv <- function(missing_value_code = NULL,
   
   # define working directory
   wd_path <- base::getwd()
+  on.exit(setwd(wd_path), add = TRUE)   # restore the working directory even if the function errors
   
   #Assign .exes or not based on OS
   if (.Platform$OS.type == "unix") {
@@ -132,11 +135,73 @@ bf90_cv <- function(missing_value_code = NULL,
   
   # Run BF90 programs for the whole dataset
   setwd(input_files_dir)
+
+  # --- Genotyped-animal handling (genomic runs) -------------------------------
+  # Default: only genotyped animals are TESTED (put in folds); all phenotyped
+  # animals stay in TRAINING. With genotyped_only = TRUE only genotyped+phenotyped
+  # animals are kept: phenotyped-only records and genotyped-only individuals (in the
+  # genotype file) are both removed, so training, testing and G use the intersection.
+  swap_datafile <- function(par_lines, new_dat) {          # point DATAFILE at a filtered data file
+    i <- base::grep("^DATAFILE", par_lines)[1]
+    if(!base::is.na(i) && i < base::length(par_lines)) par_lines[i + 1] <- new_dat
+    par_lines
+  }
+  geno_ids       <- NULL
+  data_file_name <- "renf90.dat"
+  cv_snp         <- if(!is.null(snp_file_name)) snp_base else NULL   # genotype file to use (default: the original)
+  if(!is.null(snp_file_name)){
+    xref <- base::paste0(snp_base, "_XrefID")                        # renumf90: renumbered <-> original genotyped IDs
+    if(base::file.exists(xref)){
+      xref_tab <- utils::read.table(xref, header = FALSE, stringsAsFactors = FALSE)   # V1 renumbered, V2 original
+      geno_ids <- base::as.character(xref_tab[[1]])
+      dat_tab  <- utils::read.table("renf90.dat", sep = " ", header = FALSE)               # sep=" " matches bf90_phenos (renf90.dat has a leading space); same row order as readLines
+      dat_id   <- base::as.character(dat_tab[, -1, drop = FALSE][[random_effect_col + 1]]) # animal id per phenotype record
+      is_geno  <- dat_id %in% geno_ids
+      n_pheno  <- base::length(dat_id)
+      n_used   <- base::sum(is_geno)                                 # genotyped + phenotyped (used for testing)
+      n_phenoonly <- n_pheno - n_used                               # phenotyped, no genotype
+      n_genoonly  <- base::sum(!(geno_ids %in% base::unique(dat_id)))  # genotyped, no phenotype
+
+      # Report how many records are used vs not used
+      info <- base::paste0("run_cva (genomic): of ", n_pheno, " phenotype records, ", n_used,
+                           if(genotyped_only) " are genotyped and used for training and testing" else " are genotyped and used for testing",
+                           "; ", n_phenoonly, " phenotyped records have no genotype (",
+                           if(genotyped_only) "dropped" else "kept for training, not tested",
+                           "); ", n_genoonly, " genotyped animals have no phenotype (",
+                           if(genotyped_only) "removed from the genotypes" else "used in G only", ").")
+      if(n_phenoonly > 0 || (genotyped_only && n_genoonly > 0)) base::warning(info) else if(verbose) base::message(info)
+
+      if(genotyped_only){
+        pheno_renum <- base::unique(dat_id[is_geno])                 # renumbered ids of genotyped + phenotyped animals
+        base::writeLines(base::readLines("renf90.dat")[is_geno], "renf90_geno.dat")   # keep only their phenotype records
+        data_file_name <- "renf90_geno.dat"
+        if(n_genoonly > 0){                                          # drop genotyped-but-not-phenotyped from the genotypes
+          kx        <- base::as.character(xref_tab[[1]]) %in% pheno_renum
+          keep_orig <- base::as.character(xref_tab[[2]][kx])
+          gl        <- base::readLines(snp_file_name)
+          gid       <- base::sub("[[:space:]].*$", "", base::trimws(gl))              # first field = original id
+          base::writeLines(gl[gid %in% keep_orig], "cv_geno.geno")
+          utils::write.table(xref_tab[kx, , drop = FALSE], "cv_geno.geno_XrefID",
+                             row.names = FALSE, col.names = FALSE, quote = FALSE)
+          cv_snp <- "cv_geno.geno"
+        }
+      }
+      clean_snp <- base::paste0(cv_snp, "_clean")                    # reflect the genotype file actually used
+    } else {
+      base::warning("Genotype cross-reference '", xref, "' not found in ", input_files_dir,
+                    "; testing on all phenotyped animals. Run run_renum() to create it.")
+    }
+  } else if(genotyped_only){
+    base::message("run_cva: 'genotyped_only = TRUE' ignored - no SNP_file (pedigree-only run).")
+  }
+
   # For genomic analyses, make sure the G-inverse (Gi) and cleaned SNPs are saved on
   # this full-data run so every fold can reuse them (built once here).
   blup_parfile <- "renf90.par"
   if(!is.null(snp_file_name)){
     blup_par <- base::readLines("renf90.par")
+    if(data_file_name != "renf90.dat") blup_par <- swap_datafile(blup_par, data_file_name)
+    if(!is.null(cv_snp) && cv_snp != snp_base) blup_par <- base::gsub(snp_base, cv_snp, blup_par, fixed = TRUE)  # build G on the intersection genotypes
     if(!any(base::grepl("saveGInverse",  blup_par))) blup_par <- c(blup_par, "OPTION saveGInverse")
     if(!any(base::grepl("saveCleanSNPs", blup_par))) blup_par <- c(blup_par, "OPTION saveCleanSNPs")
     base::writeLines(blup_par, "renf90_blup.par")
@@ -146,7 +211,9 @@ bf90_cv <- function(missing_value_code = NULL,
 
   # predictf90 on a copy of renf90.par that adjusts the phenotype for all effects
   # except the random (animal) effect -> yhat = corrected phenotype (y*)
-  predict_par <- c(base::readLines("renf90.par"), base::paste("OPTION include_effects", random_effect_col))
+  predict_par <- base::readLines("renf90.par")
+  if(data_file_name != "renf90.dat") predict_par <- swap_datafile(predict_par, data_file_name)
+  predict_par <- c(predict_par, base::paste("OPTION include_effects", random_effect_col))
   base::writeLines(predict_par, "renf90_predict.par")
   command_predict <- paste0(file.path(path_2_execs, predict), " ", "renf90_predict.par")
   output <- execute_command(command = command_predict, logfile = "run_predict.log")
@@ -176,15 +243,23 @@ bf90_cv <- function(missing_value_code = NULL,
     if(!any(base::grepl("readGInverse",       renf90))) renf90 <- c(renf90, "OPTION readGInverse")
     if(!any(base::grepl("no_quality_control", renf90))) renf90 <- c(renf90, "OPTION no_quality_control")
     renf90 <- base::gsub(snp_base, clean_snp, renf90, fixed = TRUE)   # SNP_file -> cleaned set
+    renf90 <- renf90[!base::grepl("map_file", renf90, ignore.case = TRUE)]   # folds run plain BLUP; the SNP map is not needed
     reuse_files <- base::file.path(output_files_dir, c("Gi", clean_snp, base::paste0(clean_snp, "_XrefID")))
   } else reuse_files <- NULL
   
   # Read and preprocess the phenotype data
-  bf90_phenos <- utils::read.table(paste0("renf90.dat"), sep = " ", header = FALSE) %>%
+  bf90_phenos <- utils::read.table(data_file_name, sep = " ", header = FALSE) %>%   # training set (all animals, or genotyped-only when genotyped_only = TRUE)
     dplyr::select(-1)
   
-  # Shuffle the data and create folds
-  data_shuffled <- base::lapply(1:num_runs, function(x) bf90_phenos[base::sample(base::nrow(bf90_phenos)), ] %>%
+  # Pool of animals eligible to be TESTED (masked): genotyped animals for genomic
+  # runs, all animals for pedigree-only runs. Non-genotyped animals are never
+  # masked, so they always stay in the training set.
+  fold_pool <- bf90_phenos
+  if(!is.null(geno_ids))
+    fold_pool <- fold_pool[base::as.character(fold_pool[[random_effect_col + 1]]) %in% geno_ids, , drop = FALSE]
+
+  # Shuffle the eligible animals and create folds
+  data_shuffled <- base::lapply(1:num_runs, function(x) fold_pool[base::sample(base::nrow(fold_pool)), ] %>%
                                   dplyr::select((random_effect_col + 1)))
   
   folds <- base::lapply(data_shuffled, function(x) create_folds(x, num_folds))

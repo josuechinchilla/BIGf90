@@ -1,6 +1,6 @@
 Package: BIGf90
 Title: R Face Front for Running K-Fold Crossvalidation, Estimating EBVs and Variance Component Estimation with Blupf90 Modules
-Version: 0.5.0
+Version: 1.0.0
 Authors@R: c(person("Josue", "Chinchilla-Vargas", role = c("aut", "cre"), email = "jc3635@cornell.edu"),
              person("Cristiane", "Taniguti", role = "aut"),
              person("Alexander", "Sandercock", role = "aut"),
@@ -21,12 +21,15 @@ Depends:
     R (>= 4.3.0)
 Imports:
     dplyr (>= 1.1.4),
+    graphics,
+    grDevices,
     stats,
     utils (>= 4.3.1)
 Suggests:
     knitr (>= 1.10),
     rmarkdown,
     covr,
+    coda,
     testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Config/testthat/edition: 3

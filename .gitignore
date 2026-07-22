@@ -19,3 +19,5 @@ inst/test_data_salmon/
 
 # NOTE: .Rbuildignore and tests/ are intentionally NOT ignored so they stay tracked
 #       (.Rbuildignore controls the built package; tests/ will hold testthat unit tests).
+/doc/
+/Meta/

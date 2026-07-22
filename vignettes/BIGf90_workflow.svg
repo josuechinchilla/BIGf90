@@ -1,0 +1,78 @@
+<svg viewBox="0 0 780 606" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="wfTitle wfDesc" font-family="'Helvetica Neue',Arial,sans-serif">
+  <title id="wfTitle">BIGf90 workflow diagram</title>
+  <desc id="wfDesc">Pipeline: write_par and write_geno build inputs; run_renum renumbers; run_pregs sets up the genomic relationship matrix; run_blup solves BLUP while run_gibbs, run_postgibbs and calc_h2 give variance components and heritability; run_postgs back-solves SNP effects; clean_ebvs, run_predict, run_predf, manhattan_plot and qq_plot post-process. run_cva and run_gwas are workflow functions chaining these; postGSf90 SNP weights feed back into a weighted G for wssGBLUP.</desc>
+  <defs>
+    <marker id="arw" markerWidth="10" markerHeight="8" refX="7.5" refY="3" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#666"/>
+    </marker>
+    <marker id="arwp" markerWidth="10" markerHeight="8" refX="7.5" refY="3" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#7A4FA3"/>
+    </marker>
+    <style>
+      .lbl  { font-size:13px; text-anchor:middle; fill:#1a1a1a; }
+      .plbl { font-size:12px; text-anchor:middle; fill:#1a1a1a; }
+      .sm   { font-size:10.5px; fill:#666; }
+      .smc  { font-size:10.5px; fill:#666; text-anchor:middle; }
+      .edge { stroke:#666; stroke-width:1.6; fill:none; marker-end:url(#arw); }
+      .loop { stroke:#7A4FA3; stroke-width:1.6; fill:none; stroke-dasharray:5 4; marker-end:url(#arwp); }
+      .builder { fill:#F6E7C1; stroke:#C9922B; stroke-width:1.5; }
+      .wrapper { fill:#D6E4F2; stroke:#2C6FA6; stroke-width:1.5; }
+      .post    { fill:#DCEBD3; stroke:#4C8C4A; stroke-width:1.5; }
+      .flow    { fill:#EEE6F6; stroke:#7A4FA3; stroke-width:1.5; }
+      .dash    { stroke-dasharray:5 3; }
+    </style>
+  </defs>
+
+  <text x="390" y="26" text-anchor="middle" font-size="15" font-weight="bold" fill="#1a1a1a">BIGf90 workflow: data to breeding values, cross-validation and GWAS</text>
+
+  <!-- legend -->
+  <rect x="150" y="44" width="13" height="13" class="builder"/><text x="168" y="55" class="sm">Input builder</text>
+  <rect x="292" y="44" width="13" height="13" class="wrapper"/><text x="310" y="55" class="sm">Module wrapper</text>
+  <rect x="452" y="44" width="13" height="13" class="post"/><text x="470" y="55" class="sm">Post-processor</text>
+  <rect x="612" y="44" width="13" height="13" class="flow"/><text x="630" y="55" class="sm">Workflow</text>
+
+  <!-- edges (drawn before boxes) -->
+  <path class="edge" d="M380,116 L380,150"/>
+  <path class="edge" d="M380,188 L380,222"/>
+  <path class="edge" d="M460,169 L630,169 L630,222"/>
+  <path class="edge" d="M380,260 L380,294"/>
+  <path class="edge" d="M630,260 L630,294"/>
+  <path class="edge" d="M380,332 L380,366"/>
+  <path class="edge" d="M630,332 L630,366"/>
+  <path class="edge" d="M380,404 L380,438"/>
+  <path class="edge" d="M300,313 L100,313 L100,366"/>
+  <path class="edge" d="M100,404 L100,438"/>
+  <path class="edge" d="M460,385 L510,385 L510,457 L550,457"/>
+  <!-- wssGBLUP feedback loop -->
+  <path class="loop" d="M300,387 L242,387 L242,243 L300,243"/>
+  <text x="233" y="318" class="sm" fill="#7A4FA3" text-anchor="middle" transform="rotate(-90,233,318)">SNP weights (wssGBLUP)</text>
+
+  <!-- spine (centre) -->
+  <rect x="270" y="78"  width="220" height="38" rx="7" class="builder"/><text x="380" y="102" class="lbl">write_par()  &#183;  write_geno()</text>
+  <rect x="300" y="150" width="160" height="38" rx="7" class="wrapper"/><text x="380" y="174" class="lbl">run_renum()</text>
+  <rect x="300" y="222" width="160" height="38" rx="7" class="wrapper dash"/><text x="380" y="246" class="lbl">run_pregs()</text>
+  <text x="468" y="246" class="sm">genomic only</text>
+  <rect x="300" y="294" width="160" height="38" rx="7" class="wrapper"/><text x="380" y="318" class="lbl">run_blup()</text>
+  <rect x="300" y="366" width="160" height="38" rx="7" class="wrapper"/><text x="380" y="390" class="lbl">run_postgs()</text>
+  <rect x="280" y="438" width="200" height="38" rx="7" class="post"/><text x="380" y="462" class="plbl">manhattan_plot() &#183; qq_plot()</text>
+
+  <!-- right branch: variance components + genomic prediction -->
+  <rect x="550" y="222" width="160" height="38" rx="7" class="wrapper"/><text x="630" y="246" class="lbl">run_gibbs()</text>
+  <rect x="550" y="294" width="160" height="38" rx="7" class="wrapper"/><text x="630" y="318" class="lbl">run_postgibbs()</text>
+  <rect x="550" y="366" width="160" height="38" rx="7" class="post"/><text x="630" y="390" class="lbl">calc_h2()</text>
+  <rect x="550" y="438" width="160" height="38" rx="7" class="wrapper"/><text x="630" y="462" class="lbl">run_predf()</text>
+
+  <!-- left branch: breeding-value outputs -->
+  <rect x="20" y="366" width="160" height="38" rx="7" class="post"/><text x="100" y="390" class="lbl">clean_ebvs()</text>
+  <rect x="20" y="438" width="160" height="38" rx="7" class="wrapper"/><text x="100" y="462" class="lbl">run_predict()</text>
+
+  <!-- small captions under branch heads -->
+  <text x="630" y="212" class="smc">variance components</text>
+  <text x="100" y="356" class="smc">GEBVs to original IDs</text>
+
+  <!-- workflow pills -->
+  <rect x="40" y="520" width="700" height="30" rx="15" class="flow"/>
+  <text x="390" y="539" class="plbl">run_cva()  =  run_renum &#8594; run_blup &#8594; run_predict     (k-fold CV: predictive ability, bias, accuracy)</text>
+  <rect x="40" y="558" width="700" height="30" rx="15" class="flow"/>
+  <text x="390" y="577" class="plbl">run_gwas()  =  run_renum &#8594; run_pregs &#8594; (run_blup + run_postgs) &#215; iterations     (ssGBLUP / wssGBLUP)</text>
+</svg>

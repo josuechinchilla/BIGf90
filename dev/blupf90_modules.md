@@ -70,7 +70,7 @@ Key `OPTION`s: `whichG` (how G is formed), `whichfreq`/`FreqFile` (allele freqs)
 |---|---|---|---|---|---|
 | **postGSf90** | Genomic postprocessor: back-solves **SNP effects** from GEBVs (ssGWAS), variance explained by SNP windows, SNP weights, and (optionally) p-values. | `renf90.par` + `solutions` (from a genomic blupf90+ run) + genotypes + `map_file` | `snp_sol` (SNP solution + weight + window variance), `chrsnp`/`chrsnpvar`, `windows_variance`, `snp_pred` (freqs + SNP effects), Manhattan plots, `snp_var` (with `snp_p_value`) | GWAS / SNP effects, variance by genomic window, or SNP weights to build a weighted G (iterate with preGSf90). | — |
 | **predf90** | Predicts **direct genomic values (DGV = Zâ)** for young/new genotyped animals from existing SNP effects — no re-run. Command-line. | `snp_pred` (from postGSf90) + genotype file of new animals (`--snpfile`); `snp_var` for `--acc` | DGV predictions, *(optional)* reliabilities | Indirect prediction of animals genotyped after the main evaluation. | — |
-| **predictf90** | Computes **y\*** (phenotype adjusted for the non-included effects), **ŷ** (included effects) and residuals, so `cor(ŷ, y*) ≈ accuracy`. | a blupf90 parameter file + `solutions` + data file + `OPTION include_effects` | `yhat_residual` (y\*, ŷ, residual), plus an EBV file if animal is in the model | Cross-validation / model accuracy — this is the engine BIGf90's `bf90_cv()` uses. | `run_predict()` |
+| **predictf90** | Computes **y\*** (phenotype adjusted for the non-included effects), **ŷ** (included effects) and residuals, so `cor(ŷ, y*) ≈ accuracy`. | a blupf90 parameter file + `solutions` + data file + `OPTION include_effects` | `yhat_residual` (y\*, ŷ, residual), plus an EBV file if animal is in the model | Cross-validation / model accuracy — this is the engine BIGf90's `run_cva()` uses. | `run_predict()` |
 | **validationf90** | Validation of predictions via the LR (Legarra–Reverter) method — bias, dispersion, and accuracy from comparing partial- vs whole-data solutions. | solutions from reduced vs full data (+ pedigree/genomic) | LR validation statistics (bias, slope/dispersion, accuracy ratio) | Forward/predictive validation across a data cut. *(Newer program; light coverage in the bundled manual.)* | — |
 | **idsolf90** | Utility to attach **original IDs** to renumbered solutions (via `renadd0X.ped` / `_XrefID`). *(Not in the main manual's program list — described from its role.)* | `solutions` + `renadd0X.ped` / `_XrefID` | solutions keyed by original ID | Translate results back to real IDs. `clean_ebvs()` does the equivalent in R. | (`clean_ebvs()`) |
 
@@ -81,7 +81,7 @@ Key `OPTION`s: `whichG` (how G is formed), `whichfreq`/`FreqFile` (allele freqs)
 | File | What it is |
 |---|---|
 | `blupf90_cv.par` | Example parameter file for the cross-validation workflow. |
-| `cva_blupf90.sh` | Bash driver orchestrating k-fold CV (renumber → mask folds → blupf90+ → predictf90 → collect). `bf90_cv()` is the R reimplementation. |
+| `cva_blupf90.sh` | Bash driver orchestrating k-fold CV (renumber → mask folds → blupf90+ → predictf90 → collect). `run_cva()` is the R reimplementation. |
 | `acc_and_b1_linux.R` | Computes predictive accuracy and b1 (regression slope / bias) from the CV outputs. |
 | `mcmc_coda_evaluation.R` | MCMC convergence diagnostics (via the `coda` package) for gibbsf90+ output. |
 
@@ -103,7 +103,7 @@ Key `OPTION`s: `whichG` (how G is formed), `whichfreq`/`FreqFile` (allele freqs)
    - **postGSf90** back-solves SNP effects (ssGWAS) and SNP weights; those weights can feed
      **back** into preGSf90 as a weighted G (an iterative loop).
    - **predf90** turns SNP effects (`snp_pred`) into DGVs for newly genotyped animals.
-   - **predictf90** produces y\* for cross-validation accuracy (used by `bf90_cv()`).
+   - **predictf90** produces y\* for cross-validation accuracy (used by `run_cva()`).
    - **validationf90** runs LR-method forward validation.
 6. **Back to original IDs.** `clean_ebvs()` (or **idsolf90**) maps renumbered solutions to
    real animal IDs.

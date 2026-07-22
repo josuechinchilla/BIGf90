@@ -20,6 +20,9 @@ run_renum(
 
 \item{verbose}{logical if TRUE prints log information}
 }
+\value{
+No return value, called for side effects: runs renumf90, producing the renumbered renf90.* files, the renumbered pedigree (renadd0X.ped) and the genotype cross-reference (_XrefID) file.
+}
 \description{
 This function runs renumf90.
 }

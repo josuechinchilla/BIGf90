@@ -4,10 +4,15 @@
 \alias{run_blup}
 \title{Run blupf90+}
 \usage{
-run_blup(path_2_execs)
+run_blup(path_2_execs, par_file = "renf90.par")
 }
 \arguments{
 \item{path_2_execs}{path to a folder that holds the renumf90 executable. This field should be in quotes "".}
+
+\item{par_file}{name of the parameter file to run. Defaults to "renf90.par".}
+}
+\value{
+No return value, called for side effects: runs blupf90+ using the parameter file, producing the solutions file and the run_blup.log log file.
 }
 \description{
 This function runs blupf90+ using a pre-processed parameter file called renf90.par.

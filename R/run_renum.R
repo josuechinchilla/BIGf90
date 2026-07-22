@@ -9,6 +9,8 @@
 #' @param raw_par_file name of the .par file that will be processed.  This field should be in quotes "".
 #' @param output_files_dir path to the folder to store the output files renadd03.ped renf90.dat renf90.fields renf90.inb renf90.par renf90.tables run_renum.log
 #' @param verbose logical if TRUE prints log information
+#'
+#' @return No return value, called for side effects: runs renumf90, producing the renumbered renf90.* files, the renumbered pedigree (renadd0X.ped) and the genotype cross-reference (_XrefID) file.
 #' @examples
 #'
 #' \donttest{
@@ -137,6 +139,15 @@ run_renum <- function(path_2_execs = ".",
     file.symlink(paste0(base::file.path(snpfile),"_XrefID"), base::file.path(output_files_dir, paste0(basename(snpfile), "_XrefID")))
   }
   
+  # copy map file (OPTION map_file), if referenced in the parameter file and present
+  map_idx <- grep("map_file", parfile, ignore.case = TRUE)
+  if(length(map_idx) != 0){
+    map_name <- basename(trimws(sub(".*map_file", "", parfile[map_idx[1]])))
+    map_src  <- file.path(input_files_dir, map_name)
+    if(file.exists(map_src) && !file.exists(file.path(output_files_dir, map_name)))
+      file.symlink(normalizePath(map_src), file.path(output_files_dir, map_name))
+  }
+
   # Return to past working directory
   setwd(cur_dir)
 }

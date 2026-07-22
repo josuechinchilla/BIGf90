@@ -6,13 +6,16 @@
 #' Since this function depends only on the renf90.par parameter file, the only input needed from the user is a path where the blupf90+ executable is located. A log file called run_blup.log is also produced.
 #'
 #' @param path_2_execs path to a folder that holds the renumf90 executable. This field should be in quotes "".
+#' @param par_file name of the parameter file to run. Defaults to "renf90.par".
+#'
+#' @return No return value, called for side effects: runs blupf90+ using the parameter file, producing the solutions file and the run_blup.log log file.
 #' @examples
 #' ## Example
 #'
 #' # run_blup(path_2_execs = "/Users/johndoe/Desktop/bf90_execs/")
 #'
 #' @export
-run_blup <- function(path_2_execs) {
+run_blup <- function(path_2_execs, par_file = "renf90.par") {
   # Function to run commands on the terminal and log output
   execute_command <- function(command, logfile) {
     if (.Platform$OS.type == "unix") {
@@ -36,12 +39,12 @@ run_blup <- function(path_2_execs) {
   if (!file.exists(file.path(path_2_execs, blup))) {
     stop("Executable not found at: ", file.path(path_2_execs, blup))
   }
-  if (!file.exists("renf90.par")) {
-    stop("Parameter file not found: renf90.par")
+  if (!file.exists(par_file)) {
+    stop("Parameter file not found: ", par_file)
   }
 
   # Run the command
-  output <- execute_command(command = paste0(file.path(path_2_execs, blup), " renf90.par"), logfile = "run_blup.log")
+  output <- execute_command(command = paste0(file.path(path_2_execs, blup), " ", par_file), logfile = "run_blup.log")
 
   # Capture and print the log file content
   if (file.exists("run_blup.log")) {

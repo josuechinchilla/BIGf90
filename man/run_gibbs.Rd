@@ -29,6 +29,9 @@ run_gibbs(
 
 \item{verbose}{logical if TRUE prints log information}
 }
+\value{
+No return value, called for side effects: runs gibbsf90+, producing the MCMC posterior-sample files (e.g. last_solutions, gibbs_samples, fort.99) and the run_gibbs.log log file.
+}
 \description{
 This function runs gibbsf90+.
 }
