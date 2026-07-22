@@ -32,8 +32,8 @@ manhattan_plot(
 \code{\link{run_gwas}}; or an already-read snp_sol data frame.}
 
 \item{statistic}{y axis: "variance" (proportion of genetic variance explained,
-default) or "pvalue" (\eqn{-\log_{10}(p)}; needs OPTION snp_p_value). Falls back to
-variance when \code{by = "window"}.}
+default) or "pvalue" (\eqn{-\log_{10}(p)}; needs OPTION snp_p_value). Falls back
+to variance when \code{by = "window"}.}
 
 \item{by}{"snp" for per-SNP points (default) or "window" for per-window points.}
 
@@ -48,9 +48,9 @@ Defaults to "windows_variance".}
 \item{threshold}{reference line(s). NULL for none. A number (or numeric vector) draws
 horizontal line(s) at those y values -- use this for the variance plot (e.g.
 \code{threshold = 0.02}). For the p-value plot a character vector picks computed
-lines: "bonferroni" (\eqn{-\log_{10}(\alpha/m)}), "fdr" (Benjamini-Hochberg at level
-\code{alpha}) and/or "meff" (Bonferroni on the effective number of tests, needs
-\code{meff}). TRUE is shorthand for "bonferroni".}
+lines: "bonferroni" (\eqn{-\log_{10}(\alpha/m)}), "fdr" (Benjamini-Hochberg at
+level \code{alpha}) and/or "meff" (Bonferroni on the effective number of tests,
+needs \code{meff}). TRUE is shorthand for "bonferroni".}
 
 \item{alpha}{significance level for the "bonferroni" / "fdr" / "meff" lines. Defaults to 0.05.}
 
@@ -58,8 +58,8 @@ lines: "bonferroni" (\eqn{-\log_{10}(\alpha/m)}), "fdr" (Benjamini-Hochberg at l
 GEC, simpleM, or Li and Ji). NULL disables the meff line.}
 
 \item{gc_correct}{logical (default FALSE); if TRUE apply genomic control to the
-p-value plot -- divide every chi-square by the genomic inflation factor lambda
-before recomputing p, recentring the null. The lambda shown is pre-correction.}
+p-value plot. The plot annotation will show lambda = 1.000 (corrected) and the
+original lambda in parentheses.}
 
 \item{highlight}{optional y value above which points are drawn in \code{highlight_col};
 NULL highlights nothing.}
@@ -72,7 +72,8 @@ NULL highlights nothing.}
 
 \item{main}{plot title. NULL builds a default.}
 
-\item{save_to}{optional output file (.png or .pdf); NULL draws to the active device.}
+\item{save_to}{optional output file (.png or .pdf); NULL draws to the active device
+(RStudio Plots pane when running interactively).}
 
 \item{width, height}{size in inches when saving. Default 10 x 4.}
 
@@ -85,17 +86,22 @@ plotted statistic \code{y} and the cumulative x coordinate \code{x_cum}.
 \description{
 Draws a Manhattan plot directly from the postGSf90 outputs produced by
 \code{\link{run_postgs}} / \code{\link{run_gwas}}. Two y-axis statistics are
-supported: the proportion of additive genetic variance explained (the ssGBLUP /
-wssGBLUP standard, e.g. Vallejo et al. 2024), available from any genomic run, or
-\eqn{-\log_{10}(p)} from the exact-GWAS p-values, which need \code{OPTION snp_p_value}
-(set \code{snp_pvalue = TRUE} in \code{\link{run_gwas}}). Points are drawn per SNP
-(\code{by = "snp"}, from \code{snp_sol}) or per non-overlapping window
-(\code{by = "window"}, from \code{windows_variance}).
+supported: the proportion of additive genetic variance explained available from any
+genomic run, or \eqn{-\log_{10}(p)} from the exact-GWAS p-values, which need
+\code{OPTION snp_p_value} in the .par file (set snp_pvalue = TRUE in
+\code{\link{run_gwas}}). Points are drawn per SNP (\code{by = "snp"}, from
+\code{snp_sol}) or per non-overlapping window (\code{by = "window"}, from
+\code{windows_variance}).
 }
 \details{
-Multiple-testing lines (Bonferroni, Benjamini-Hochberg FDR, or a Bonferroni on the
-effective number of tests) are only meaningful for the p-value plot -- variance
-explained is not a test statistic, so there use a numeric variance cutoff instead.
+Multiple-testing lines (Bonferroni and Benjamini-Hochberg FDR) are only meaningful
+for the p-value plot -- variance explained is not a test statistic, so there use a
+numeric variance cutoff instead.
+
+Genomic control to p-value plots is available with \code{gc_correct}. Genomic
+control divides every chi-square by the genomic inflation factor lambda before
+recomputing p, recentring the null. When \code{gc_correct = TRUE} the reported
+lambda is 1.000 (corrected); the original lambda is shown in parentheses.
 }
 \examples{
 

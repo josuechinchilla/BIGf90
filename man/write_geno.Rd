@@ -5,8 +5,8 @@
 \title{Build a BLUPf90 genotype (.geno) file from a PLINK .ped}
 \usage{
 write_geno(
-  ped = NULL,
   file = NULL,
+  ped = NULL,
   map = NULL,
   map_out = NULL,
   id_col = 2,
@@ -20,17 +20,19 @@ write_geno(
 )
 }
 \arguments{
+\item{file}{path/name of the .geno file to create. This field should be in quotes "".}
+
 \item{ped}{path to the PLINK .ped file (no header, whitespace-separated).
 This field should be in quotes "".}
 
-\item{file}{path/name of the .geno file to create. This field should be in quotes "".}
-
 \item{map}{optional path to the matching PLINK .map file. When given it is used
 to check that the number of loci equals the number of markers (its number of
-rows) and, together with \code{map_out}, to write a BLUPf90 marker map.}
+rows) and to write a BLUPf90 marker map (see \code{map_out}).}
 
 \item{map_out}{optional path to write a BLUPf90 marker map (snp chr pos), built
-from \code{map}. NULL to skip.}
+from \code{map}. When \code{map} is provided and \code{map_out} is NULL, the
+map is written automatically to the same path as \code{file} with a .mapout
+extension. Set to NULL explicitly to skip only when \code{map} is also NULL.}
 
 \item{id_col}{leading column holding the animal ID. Defaults to 2 (the PLINK IID).}
 
@@ -38,7 +40,7 @@ from \code{map}. NULL to skip.}
 Defaults to 6 (the PLINK FID IID PAT MAT SEX PHENOTYPE columns).}
 
 \item{alleles_per_locus}{2 for the \code{--recode12} layout (two allele codes
-per locus, the default) or 1 for genotypes already coded as one 0/1/2 dosage.}
+per locus, the default) or 1 for genotypes already coded as one 1/2 dosage.}
 
 \item{count_allele}{allele code counted toward the dosage when
 \code{alleles_per_locus = 2}. Defaults to 2 (so 1 1 -> 0, 2 2 -> 2), matching
@@ -61,18 +63,16 @@ already exists.}
 }
 \description{
 Converts a PLINK \code{.ped} into the genotype file that the BLUPf90 programs
-read: each line is the animal ID, left-justified in a fixed-width field, then a
+read, with each line is the animal ID, left-justified in a fixed-width field, then a
 contiguous string of one 0/1/2 allele-dosage per SNP (missing written as
-\code{missing_code}, default 5). It does the same recoding as the usual
-cut/tr/sed/paste pipeline, but pads the ID so every row's genotypes start at the
-same column, as BLUPf90 requires (fixed format).
+\code{missing_code}, 5 by default).
 }
 \details{
-By default the input is the \code{--recode12} layout, with TWO allele codes
+By default the input is the \code{.ped} layout, with TWO allele codes
 (1/2, and 0 for a missing allele) per locus; each pair is collapsed to a dosage
-equal to the count of \code{count_allele} (so 1 1 -> 0, 1 2 -> 1, 2 2 -> 2, and
+equal to the count of \code{count_allele} (so 1 1 -> 0, 1 2 and 2 1-> 1, 2 2 -> 2, and
 any 0 -> missing). Set \code{alleles_per_locus = 1} if the genotypes are already
-one 0/1/2 dosage per locus.
+one 1/2 dosage per locus.
 
 The \code{.ped} must have NO header: a set of leading, non-genotype columns
 (the six PLINK columns FID IID PAT MAT SEX PHENOTYPE, by default) followed by
@@ -87,7 +87,7 @@ column (\code{id_col = 1}) instead, so check your file.
  # PLINK --recode12 ped (6 lead cols, two allele codes per locus, ID in col 2):
  # write_geno(ped  = "ped012.ped",
  #           file = "bf90_geno.txt",
- #           map  = "ped012.map")   # optional locus-count check
+ #           map  = "ped012.map")   # marker map written to bf90_geno.mapout
 }
 
 }

@@ -1,10 +1,10 @@
 #' Write a RENUMF90 parameter (.par) file
 #'
-#' This function writes the raw RENUMF90 parameter (.par) file.
+#' This function writes the raw parameter (.par) file to be used with RENUMf90.
 #'
 #' This function assembles the raw parameter file that you feed to \code{\link{run_renum}}
-#' (i.e. the file you would otherwise write by hand), NOT the renf90.par file that
-#' RENUMF90 produces. It is built from the standard RENUMF90 blocks in order:
+#' , NOT the renf90.par file that RENUMF90 produces. 
+#' It is built from the standard RENUMF90 blocks in order:
 #' DATAFILE, TRAITS, FIELDS_PASSED TO OUTPUT, WEIGHT(S), RESIDUAL_VARIANCE, the EFFECT
 #' blocks, the random-effect block, an optional SNP_FILE, an optional (CO)VARIANCES block
 #' and any OPTION lines.

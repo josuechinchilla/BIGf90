@@ -26,7 +26,8 @@ labelling / heritability (diagnostics still run on the raw components).}
 \item{genetic_col}{for \code{source = "postgibbs"} only (no effect labels in that
 file): which variance column is the genetic one. Defaults to 1.}
 
-\item{output_dir}{directory for the PDF and text outputs. NULL uses \code{input_files_dir}.}
+\item{output_dir}{directory for the PDF and text outputs. NULL uses
+\code{input_files_dir}.}
 
 \item{verbose}{logical; if TRUE prints the verdict, suggested settings and paths.}
 }
@@ -41,18 +42,17 @@ median, 95\\% HPD, MCSE, SD; or NULL), the raw \code{mcmc} object, the
 }
 \description{
 Runs post-Gibbs diagnostics on the MCMC samples from \code{\link{run_gibbs}} /
-\code{\link{run_postgibbs}} using the \pkg{coda} package, following the CODA
-post-Gibbs workflow of Vallejo et al. Beyond the diagnostic plots it returns a
-decision: a per-parameter convergence table, an overall pass/fail flag, a
-ready-to-use set of re-run settings for \code{\link{run_gibbs}}, and the
-heritability posterior with a 95\\% HPD interval.
+\code{\link{run_postgibbs}} using the \pkg{coda} package. It returns a
+per-parameter convergence table, an overall pass/fail flag, a ready-to-use set
+of re-run settings for \code{\link{run_gibbs}}, and the heritability posterior
+with a 95\\% HPD interval.
 }
 \details{
-It builds a \code{coda} \code{mcmc} object from the sampled (co)variance
-components (and, when the genetic effect is identified via \code{random_effect},
-the derived heritability). For each parameter it reports the posterior mean, SD
-and median, the 95\\% HPD interval, the effective sample size (ESS), the Geweke z
-and the Raftery-Lewis dependence factor, and a \code{status} of "converged",
+It builds a \code{coda} mcmc object from the sampled (co)variance components
+(and, when the genetic effect is identified via random_effect, the derived
+heritability). For each parameter it reports the posterior mean, SD and median,
+the 95\\% HPD interval, the effective sample size (ESS), the Geweke z and the
+Raftery-Lewis dependence factor, and a \code{status} of "converged",
 "borderline" or "failed". A \code{warning} is emitted if any parameter has not
 converged. It also returns suggested \code{run_gibbs()} settings (burn-in, total
 iterations, thinning) from the Raftery-Lewis diagnostic, and the heritability
@@ -61,8 +61,9 @@ posterior with a 95\\% HPD interval.
 By default it reads gibbsf90+'s \code{gibbs_samples} (available even when
 postgibbsf90's diagnostic step fails and leaves \code{postgibbs_samples} empty);
 set \code{source = "postgibbs"} to read \code{postgibbs_samples} instead. A
-multi-page PDF (trace/density, autocorrelation, Geweke and normal-QQ) and a text
-summary (mcmc_diagnostics.pdf / .txt) are written to \code{output_dir}.
+multi-page PDF (trace/density, autocorrelation, Geweke and normal-QQ) is written
+to \code{output_dir}; the normal-QQ plots are also rendered to the active device
+(RStudio Plots pane when running interactively).
 }
 \examples{
 

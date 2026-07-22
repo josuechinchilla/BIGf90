@@ -32,7 +32,8 @@ rank-coded / unmapped chromosome). NULL keeps all.}
 \item{per_chromosome}{logical; if TRUE draw one QQ panel per chromosome. Defaults to FALSE.}
 
 \item{gc_correct}{logical (default FALSE); if TRUE apply genomic control -- divide
-every chi-square by the genome-wide lambda before recomputing p.}
+every chi-square by the genome-wide lambda before recomputing p. The plot annotation
+will show lambda = 1.000 (corrected) and the original lambda in parentheses.}
 
 \item{point_cex}{point size. Defaults to 0.5.}
 
@@ -40,7 +41,8 @@ every chi-square by the genome-wide lambda before recomputing p.}
 
 \item{main}{plot title (overall plot only). NULL builds a default.}
 
-\item{save_to}{optional output file (.png or .pdf); NULL draws to the active device.}
+\item{save_to}{optional output file (.png or .pdf); NULL draws to the active device
+(RStudio Plots pane when running interactively).}
 
 \item{width, height}{size in inches when saving. Default 7 x 7.}
 
@@ -49,7 +51,9 @@ every chi-square by the genome-wide lambda before recomputing p.}
 \value{
 (invisibly) a data frame of the genomic inflation factor: one row
 (\code{chr = "all"}) for the overall plot, or one row per chromosome when
-\code{per_chromosome = TRUE}, with a \code{lambda} column.
+\code{per_chromosome = TRUE}, with a \code{lambda} column. When \code{gc_correct = TRUE}
+the returned lambda is 1.000 (corrected); the original lambda is preserved in an
+\code{lambda_original} column.
 }
 \description{
 Draws a quantile-quantile plot of the exact-GWAS p-values from a postGSf90
@@ -66,7 +70,8 @@ This needs \code{OPTION snp_p_value}; set \code{snp_pvalue = TRUE} in
 inflation (structure / relatedness / artifacts) and < 1 deflation (common in
 single-step models, where the relationship matrix already absorbs structure). With
 \code{gc_correct = TRUE} a single-parameter genomic-control correction divides every
-statistic by the genome-wide lambda before recomputing p.
+statistic by the genome-wide lambda before recomputing p. When \code{gc_correct = TRUE}
+the reported lambda is 1.000 (corrected); the original lambda is shown in parentheses.
 }
 \examples{
 
