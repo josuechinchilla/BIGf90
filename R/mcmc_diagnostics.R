@@ -163,6 +163,13 @@ mcmc_diagnostics <- function(input_files_dir = ".",
                        n, thin, if (converged) "CONVERGED" else "NOT CONVERGED"),
                "", "== Per-parameter table =="), con)
   utils::capture.output(print(tab, row.names = FALSE), file = con)
+  writeLines(c("",
+               "== What to look for (per parameter) ==",
+               "  ess        effective sample size  (want >= 100; higher is better)",
+               "  geweke_z   start-vs-end z-score    (want |z| < 2; |z| > 3 = drift / not stationary)",
+               "  raftery_I  dependence factor       (want < 5; large = slow mixing / a variance stuck near 0)",
+               "  status     per-parameter verdict   (want 'converged'; 'borderline'/'failed' = run longer)",
+               "  mean, median, 95% HPD [low, high]  = posterior estimate and credible interval"), con)
   if (!is.null(suggested))
     writeLines(c("", "== Suggested run_gibbs() settings ==",
                  sprintf("gibbs_iter = %d ; gibbs_burn = %d ; gibbs_keep = %d",
@@ -204,6 +211,7 @@ mcmc_diagnostics <- function(input_files_dir = ".",
     base::message(sprintf("mcmc_diagnostics: %s (%d/%d parameters). ESS(min) = %.0f.",
                           if (converged) "CONVERGED" else "NOT CONVERGED",
                           sum(status == "converged"), np, min(ess)))
+    base::message("  targets: ess >= 100 (higher better) | |geweke_z| < 2 | raftery_I < 5")
     if (!is.null(suggested))
       base::message(sprintf("  suggested run_gibbs: gibbs_iter=%d, gibbs_burn=%d, gibbs_keep=%d",
                             suggested$gibbs_iter, suggested$gibbs_burn, suggested$gibbs_keep))
