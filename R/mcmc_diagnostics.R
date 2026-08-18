@@ -33,6 +33,11 @@
 #'   file): which variance column is the genetic one. Defaults to 1.
 #' @param output_dir directory for the PDF and text outputs. NULL uses
 #'   \code{input_files_dir}.
+#' @param separate_plots logical (default FALSE); if TRUE, also write each diagnostic set
+#'   (trace/density, autocorrelation, Geweke, normal-QQ) to its own file, in addition to the
+#'   combined \code{mcmc_diagnostics.pdf}, for publication or other single-panel use.
+#' @param plot_format file type for the per-set files when \code{separate_plots = TRUE}:
+#'   "pdf" (default, vector) or "png" (300 dpi). The combined PDF is always a PDF.
 #' @param verbose logical; if TRUE prints the verdict, suggested settings and paths.
 #'
 #' @return (invisibly) a list with: \code{table} (the per-parameter data frame:
@@ -40,8 +45,9 @@
 #'   \code{converged} (overall logical), \code{suggested} (a list of run_gibbs
 #'   gibbs_iter / gibbs_burn / gibbs_keep, or NULL), \code{heritability} (mean,
 #'   median, 95\% HPD, MCSE, SD; or NULL), the raw \code{mcmc} object, the
-#'   \code{effective_size} / \code{geweke} / \code{raftery} diagnostics, and the
-#'   \code{stats_file} / \code{plot_file} paths.
+#'   \code{effective_size} / \code{geweke} / \code{raftery} diagnostics, the
+#'   \code{stats_file} / \code{plot_file} paths, and \code{plot_files} (the per-set
+#'   plot paths when \code{separate_plots = TRUE}, otherwise empty).
 #' @references Vallejo RL et al. (2024) Aquaculture 586:740819. Plummer M et al.
 #'   (2006) CODA: convergence diagnosis and output analysis for MCMC. R News 6:7-11.
 #'   Geweke J (1992). Raftery AE, Lewis SM (1992).
@@ -59,11 +65,14 @@ mcmc_diagnostics <- function(input_files_dir = ".",
                              source = c("gibbs", "postgibbs"),
                              genetic_col = 1,
                              output_dir = NULL,
+                             separate_plots = FALSE,
+                             plot_format = c("pdf", "png"),
                              verbose = TRUE) {
-  
+
   if (!requireNamespace("coda", quietly = TRUE))
     stop("Package 'coda' is required for mcmc_diagnostics(). Install it with install.packages(\"coda\").")
-  source <- match.arg(source)
+  source      <- match.arg(source)
+  plot_format <- match.arg(plot_format)
   if (is.null(output_dir)) output_dir <- input_files_dir
   ess_min <- 100
   
@@ -115,9 +124,14 @@ mcmc_diagnostics <- function(input_files_dir = ".",
   
   ## Raftery-Lewis burn-in (M), total (N), dependence factor (I)
   rI <- stats::setNames(rep(NA_real_, np), nm); rM <- NA_real_; rN <- NA_real_
-  raf_ok <- !inherits(raf, "try-error") && !is.null(raf$resmatrix)
+  # resmatrix is a character message ("you need a sample size of at least ...") when the chain
+  # is too short for Raftery-Lewis; require a numeric matrix so that case is skipped, not coerced.
+  raf_ok <- !inherits(raf, "try-error") && !is.null(raf$resmatrix) && is.numeric(raf$resmatrix)
+  if (!raf_ok)
+    warning("Not enough samples for the Raftery-Lewis diagnostic; it was dropped ",
+            "(raftery_I reported as NA). All other diagnostics still ran.", call. = FALSE)
   if (raf_ok) {
-    rm <- raf$resmatrix; if (is.null(dim(rm))) rm <- matrix(rm, nrow = 1, dimnames = list(nm, names(rm)))
+    rm <- raf$resmatrix; if (is.null(dim(rm))) rm <- matrix(rm, nrow = 1, dimnames = list(nm[1], names(rm)))
     rI[rownames(rm)] <- rm[, 4]; rM <- max(rm[, 1], na.rm = TRUE); rN <- max(rm[, 2], na.rm = TRUE)
   }
   
@@ -181,31 +195,77 @@ mcmc_diagnostics <- function(input_files_dir = ".",
                          heritability$hpd_low, heritability$hpd_high)), con)
   close(con)
   
-  ## ---- diagnostic plots (save to PDF) -------------------------------------
+  ## ---- diagnostic plots ----------------------------------------------------
+  ## Each set is a self-contained helper, so it can go into the combined PDF and
+  ## (when separate_plots = TRUE) into its own file for publication.
+  ncp   <- ceiling(sqrt(np)); nrp <- ceiling(np / ncp)
+  b_sig <- 2 / sqrt(n)                                   # +/- white-noise significance bound (2/sqrt(N))
+
+  plt_trace <- function() graphics::plot(S)             # coda trace + posterior density
+
+  plt_autocorr <- function() {
+    op <- graphics::par(mfrow = c(nrp, ncp), mar = c(4, 4, 2, 1), oma = c(4, 0, 0, 0))
+    on.exit(graphics::par(op))
+    for (j in seq_len(np)) {
+      coda::autocorr.plot(S[, j, drop = FALSE], auto.layout = FALSE)
+      graphics::abline(h = c(-0.1, 0.1),     lty = 3, col = "blue")   # practical: |acf| < 0.1
+      graphics::abline(h = c(-b_sig, b_sig), lty = 2, col = "red")    # significance: +/- 2/sqrt(N)
+    }
+    ## legend once, in the device's bottom-left, below all panels
+    graphics::par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
+    graphics::plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n", xlab = "", ylab = "")
+    graphics::legend("bottomleft", bty = "n", cex = 0.7, lty = c(3, 2), col = c("blue", "red"),
+                     legend = c("|acf| < 0.1 (practical)",
+                                sprintf("2/sqrt(N) = %.3f (significance)", b_sig)))
+  }
+
+  plt_geweke <- function() {
+    op <- graphics::par(mfrow = c(nrp, ncp), mar = c(4, 4, 2, 1), oma = c(4, 0, 0, 0))
+    on.exit(graphics::par(op))
+    for (j in seq_len(np)) {
+      try(coda::geweke.plot(S[, j, drop = FALSE], auto.layout = FALSE), silent = TRUE)
+      graphics::abline(h = c(-2, 2), lty = 3, col = "blue")           # recommended: |z| < 2
+    }
+    ## legend once, in the device's bottom-left, below all panels
+    graphics::par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
+    graphics::plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n", xlab = "", ylab = "")
+    graphics::legend("bottomleft", bty = "n", cex = 0.7, lty = 3, col = "blue",
+                     legend = "|z| < 2 (recommended)")
+  }
+
+  plt_qq <- function() {
+    op <- graphics::par(mfrow = c(nrp, ncp), mar = c(4, 4, 2, 1)); on.exit(graphics::par(op))
+    for (j in seq_len(np)) {
+      stats::qqnorm(V[, j], main = nm[j], pch = 19, cex = 0.4)
+      stats::qqline(V[, j], col = "red")
+    }
+  }
+
+  sets <- list(trace = plt_trace, autocorr = plt_autocorr, geweke = plt_geweke, qq = plt_qq)
+
+  ## combined multi-page PDF (all sets)
   pp <- file.path(output_dir, "mcmc_diagnostics.pdf")
   grDevices::pdf(pp, width = 8, height = 6)
-  op_pdf <- graphics::par(no.readonly = TRUE)
-  graphics::plot(S)
-  coda::autocorr.plot(S, auto.layout = TRUE)
-  try(coda::geweke.plot(S, auto.layout = TRUE), silent = TRUE)
-  nc <- ceiling(sqrt(np))
-  graphics::par(mfrow = c(ceiling(np / nc), nc), mar = c(4, 4, 2, 1))
-  for (j in seq_len(np)) {
-    stats::qqnorm(V[, j], main = nm[j], pch = 19, cex = 0.4)
-    stats::qqline(V[, j], col = "red")
-  }
-  graphics::par(op_pdf)
+  for (f in sets) f()
   grDevices::dev.off()
-  
-  ## ---- QQ plots also rendered to the active device (RStudio Plots pane) ---
+
+  ## optional: one file per diagnostic set (publication / other use)
+  plot_files <- character(0)
+  if (separate_plots) {
+    for (s in names(sets)) {
+      f <- file.path(output_dir, sprintf("mcmc_%s.%s", s, plot_format))
+      if (plot_format == "png") grDevices::png(f, width = 8, height = 6, units = "in", res = 300)
+      else                      grDevices::pdf(f, width = 8, height = 6)
+      sets[[s]]()
+      grDevices::dev.off()
+      plot_files <- c(plot_files, f)
+    }
+  }
+
+  ## QQ also rendered to the active device (RStudio Plots pane)
   op_screen <- graphics::par(no.readonly = TRUE)
   on.exit(graphics::par(op_screen), add = TRUE)
-  nc <- ceiling(sqrt(np))
-  graphics::par(mfrow = c(ceiling(np / nc), nc), mar = c(4, 4, 2, 1))
-  for (j in seq_len(np)) {
-    stats::qqnorm(V[, j], main = nm[j], pch = 19, cex = 0.4)
-    stats::qqline(V[, j], col = "red")
-  }
+  plt_qq()
   
   if (verbose) {
     base::message(sprintf("mcmc_diagnostics: %s (%d/%d parameters). ESS(min) = %.0f.",
@@ -216,9 +276,13 @@ mcmc_diagnostics <- function(input_files_dir = ".",
       base::message(sprintf("  suggested run_gibbs: gibbs_iter=%d, gibbs_burn=%d, gibbs_keep=%d",
                             suggested$gibbs_iter, suggested$gibbs_burn, suggested$gibbs_keep))
     base::message("  wrote ", sp, " and ", pp)
+    if (length(plot_files))
+      base::message("  wrote ", length(plot_files), " per-set plot file(s): ",
+                    paste(basename(plot_files), collapse = ", "))
   }
   
   invisible(list(table = tab, converged = converged, suggested = suggested,
                  heritability = heritability, mcmc = S, effective_size = ess,
-                 geweke = gew, raftery = raf, stats_file = sp, plot_file = pp))
+                 geweke = gew, raftery = raf, stats_file = sp, plot_file = pp,
+                 plot_files = plot_files))
 }

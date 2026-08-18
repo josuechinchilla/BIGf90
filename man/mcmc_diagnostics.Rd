@@ -10,6 +10,8 @@ mcmc_diagnostics(
   source = c("gibbs", "postgibbs"),
   genetic_col = 1,
   output_dir = NULL,
+  separate_plots = FALSE,
+  plot_format = c("pdf", "png"),
   verbose = TRUE
 )
 }
@@ -29,6 +31,13 @@ file): which variance column is the genetic one. Defaults to 1.}
 \item{output_dir}{directory for the PDF and text outputs. NULL uses
 \code{input_files_dir}.}
 
+\item{separate_plots}{logical (default FALSE); if TRUE, also write each diagnostic set
+(trace/density, autocorrelation, Geweke, normal-QQ) to its own file, in addition to the
+combined \code{mcmc_diagnostics.pdf}, for publication or other single-panel use.}
+
+\item{plot_format}{file type for the per-set files when \code{separate_plots = TRUE}:
+"pdf" (default, vector) or "png" (300 dpi). The combined PDF is always a PDF.}
+
 \item{verbose}{logical; if TRUE prints the verdict, suggested settings and paths.}
 }
 \value{
@@ -37,8 +46,9 @@ mean, sd, median, hpd_low, hpd_high, ess, geweke_z, raftery_I, status),
 \code{converged} (overall logical), \code{suggested} (a list of run_gibbs
 gibbs_iter / gibbs_burn / gibbs_keep, or NULL), \code{heritability} (mean,
 median, 95\\% HPD, MCSE, SD; or NULL), the raw \code{mcmc} object, the
-\code{effective_size} / \code{geweke} / \code{raftery} diagnostics, and the
-\code{stats_file} / \code{plot_file} paths.
+\code{effective_size} / \code{geweke} / \code{raftery} diagnostics, the
+\code{stats_file} / \code{plot_file} paths, and \code{plot_files} (the per-set
+plot paths when \code{separate_plots = TRUE}, otherwise empty).
 }
 \description{
 Runs post-Gibbs diagnostics on the MCMC samples from \code{\link{run_gibbs}} /

@@ -5,12 +5,22 @@
 #' This function sets up and runs a K-fold cross-validation analysis (CVA) using blupf90+ and predictf90.
 #' The function run_renumf90 needs to be used beforehand to process a .par file created by the user.
 #' Using the phenotype corrected for all fixed effects (y*), the function reports predictive ability as the correlation between y* and the ebvs, accuracy as that correlation divided by the square-root of the narrow-sense heritability, and bias as the regression of y* on the ebvs.
+#' For a multi-trait model set \code{multivariate} to the number of traits: each trait is validated in turn inside
+#' the full multi-trait model (only that trait's phenotype is masked in the test fold, the others stay observed),
+#' and predictive ability / bias / accuracy are reported per trait. \code{multivariate = 1} (the default) is the
+#' single-trait analysis and behaves exactly as before.
 #'
 #' @param missing_value_code code used in the .par file after OPTION MISSING to indicate missing phenotype, if this option is no use, this value must be 0.
 #' @param random_effect_col Column where random effect is located, found under RANDOM_GROUP in the renf90.par file.
-#' @param h2 estimate of narrow-sense heritabilty.This value is use to calculate accuracy of ebvs
+#' @param h2 estimate of narrow-sense heritabilty. Used to calculate accuracy of ebvs. A single value when
+#'   \code{multivariate = 1}; a vector with one value per trait (in trait order) when \code{multivariate > 1}.
 #' @param num_runs Number of independent cross-validation runs to be performed.
 #' @param num_folds Number of folds to be generated within each independent run.
+#' @param multivariate number of traits in the model. Default 1 = single-trait CVA (unchanged). A value greater
+#'   than 1 validates each of the traits in turn within the multi-trait model and reports results per trait.
+#' @param ystar_value_cols optional integer vector giving, for each trait, the column of \code{yhat_residual} that
+#'   holds that trait's corrected phenotype (y*). NULL (default) assumes trait t is in column \code{t + 1}
+#'   (id in column 1); for a single trait this is column 2, as before.
 #' @param genotyped_only logical (default FALSE); only relevant for genomic runs (a SNP_file in the parameter file). When FALSE (the default, matching the reference complete-data CVA), all phenotyped animals are used for TRAINING and G is built on all genotyped animals, but only genotyped animals are TESTED (placed in the CV folds). When TRUE, the analysis is restricted to animals that have BOTH a genotype and a phenotype: phenotyped-only records are dropped from training and genotyped-only animals are removed from the genotype file, so G is built on the intersection. Ignored for pedigree-only runs.
 #' @param output_table_name Name of the final tab-separated out-up file. This field should be in quotes "".
 #' @param path_2_execs path to a folder that holds all blupf90 executables that ill be used (blupf90+,predictf90). This field should be in quotes "".
@@ -19,7 +29,7 @@
 #' @param seed set seed for the stochastic process
 #' @param verbose logical defining if information will be printed on the console
 #'
-#' @return a tab-separated file that includes accuracy and bias estimates of ebvs.
+#' @return a tab-separated file that includes predictive ability, accuracy and bias estimates of ebvs (per trait when multivariate > 1).
 #' @import dplyr
 #' @examples
 #' ## Example for a CVA with 5 independent runs dividing the data in 10 folds.
@@ -42,6 +52,8 @@ run_cva <- function(missing_value_code = NULL,
                     h2 = NULL,
                     num_runs = NULL,
                     num_folds = NULL,
+                    multivariate = 1,
+                    ystar_value_cols = NULL,
                     path_2_execs = ".",
                     input_files_dir = ".",
                     output_files_dir = ".",
@@ -49,9 +61,9 @@ run_cva <- function(missing_value_code = NULL,
                     genotyped_only = FALSE,
                     seed = 101919,
                     verbose = TRUE) {
-  
+
   input_files_dir <- normalizePath(input_files_dir)
-  
+
   # Checks
   output_files_dir <- normalizePath(output_files_dir)
   if(file.exists(output_files_dir)){
@@ -60,21 +72,33 @@ run_cva <- function(missing_value_code = NULL,
   } else {
     stop(paste("Directory", output_files_dir, "does not exist. Create it before running the function."))
   }
-  
+
   if(is.null(missing_value_code)) stop("Specify missing_value_code")
   if(is.null(random_effect_col)) stop("Specify random_effect_col")
   if(is.null(h2)) stop("Specify h2")
   if(is.null(num_runs)) stop("Specify num_runs")
   if(is.null(num_folds)) stop("Specify num_folds")
-  
+
+  # Multi-trait bookkeeping. multivariate = number of traits; single-trait (=1) is the t = 1 special case.
+  n_traits <- as.integer(multivariate)
+  if(is.na(n_traits) || n_traits < 1) stop("'multivariate' must be a positive integer (number of traits).")
+  traits <- seq_len(n_traits)
+  if(length(h2) != n_traits) stop("Provide one h2 per trait: length(h2) = ", length(h2), " but multivariate = ", n_traits, ".")
+  if(is.null(ystar_value_cols)) ystar_value_cols <- traits + 1L    # trait t -> yhat_residual column t + 1 (col 2 for a single trait)
+  if(length(ystar_value_cols) != n_traits) stop("'ystar_value_cols' must have one column per trait.")
+  # Column of the animal id in the phenotype frame (after dropping renf90.dat's leading blank column):
+  # traits occupy the first n_traits columns, so effect 'random_effect_col' sits at n_traits + random_effect_col
+  # (which is random_effect_col + 1 when n_traits == 1, i.e. the original single-trait value).
+  id_pos <- n_traits + random_effect_col
+
   if (!file.exists(file.path(input_files_dir,"renf90.par"))) stop("File 'renf90.par' not found at: ", input_files_dir)
   if (!file.exists(file.path(input_files_dir,"renf90.fields"))) stop("File 'renf90.fields' not found at: ", input_files_dir)
   if (!file.exists(file.path(input_files_dir,"renf90.tables"))) stop("File 'renf90.tables' not found at: ", input_files_dir)
   if (!file.exists(file.path(input_files_dir,"renf90.dat"))) stop("File 'renf90.dat' not found at: ", input_files_dir)
-  
+
   # Check files in the parameter files
   parfile <- readLines(file.path(input_files_dir,"renf90.par"))
-  
+
   snpfile <- grep("SNP_file", parfile)
   if(length(snpfile) != 0) {
     snp_file_name <- sapply(strsplit(parfile[snpfile], " "), function(x) x[length(x)])
@@ -89,7 +113,7 @@ run_cva <- function(missing_value_code = NULL,
     snp_base  <- base::basename(snp_file_name)      # e.g. sealice_match.geno
     clean_snp <- base::paste0(snp_base, "_clean")   # produced by saveCleanSNPs
   }
-  
+
   pedfile <- grep(" FILE", parfile) + 1
   if(length(pedfile) != 0) {
     renf90_ped_name <- gsub(" ", "", parfile[pedfile])
@@ -98,20 +122,21 @@ run_cva <- function(missing_value_code = NULL,
                                                                              "line", pedfile, "does not exist."))
     renf90_ped_name <- normalizePath(file.path(input_files_dir, renf90_ped_name))
   } else renf90_ped_name <- NULL
-  
+
   if(is.null(output_table_name)) stop("Define output table name.")
-  
+
   # set seed for reproducibility
   base::set.seed(seed)
-  
+
   path_2_execs <- normalizePath(path_2_execs)
-  
+
   # Inform parameters and directories set
   if(verbose){
     cat("Parameters set:\n",
         "  missing_value_code = ", missing_value_code,"\n",
         "  random_effect_col = ", random_effect_col,"\n",
-        "  h2 = ",h2 ,"\n",
+        "  h2 = ", paste(h2, collapse = " "),"\n",
+        "  multivariate (n traits) = ", n_traits,"\n",
         "  num_runs = ", num_runs,"\n",
         "  num_folds =", num_folds,"\n",
         "Directories:\n",
@@ -119,11 +144,11 @@ run_cva <- function(missing_value_code = NULL,
         "  output files:", output_files_dir, "\n",
         "  executable files:", path_2_execs)
   }
-  
+
   # define working directory
   wd_path <- base::getwd()
   on.exit(setwd(wd_path), add = TRUE)   # restore the working directory even if the function errors
-  
+
   #Assign .exes or not based on OS
   if (.Platform$OS.type == "unix") {
     predict = "predictf90"
@@ -132,7 +157,7 @@ run_cva <- function(missing_value_code = NULL,
     predict = "predictf90.exe"
     blup = "blupf90+.exe"
   }
-  
+
   # Run BF90 programs for the whole dataset
   setwd(input_files_dir)
 
@@ -155,7 +180,7 @@ run_cva <- function(missing_value_code = NULL,
       xref_tab <- utils::read.table(xref, header = FALSE, stringsAsFactors = FALSE)   # V1 renumbered, V2 original
       geno_ids <- base::as.character(xref_tab[[1]])
       dat_tab  <- utils::read.table("renf90.dat", sep = " ", header = FALSE)               # sep=" " matches bf90_phenos (renf90.dat has a leading space); same row order as readLines
-      dat_id   <- base::as.character(dat_tab[, -1, drop = FALSE][[random_effect_col + 1]]) # animal id per phenotype record
+      dat_id   <- base::as.character(dat_tab[, -1, drop = FALSE][[id_pos]]) # animal id per phenotype record
       is_geno  <- dat_id %in% geno_ids
       n_pheno  <- base::length(dat_id)
       n_used   <- base::sum(is_geno)                                 # genotyped + phenotyped (used for testing)
@@ -210,14 +235,14 @@ run_cva <- function(missing_value_code = NULL,
   output <- execute_command(command = paste0(file.path(path_2_execs, blup)," ", blup_parfile), logfile = "run_blup.log")
 
   # predictf90 on a copy of renf90.par that adjusts the phenotype for all effects
-  # except the random (animal) effect -> yhat = corrected phenotype (y*)
+  # except the random (animal) effect -> yhat = corrected phenotype (y*) for every trait
   predict_par <- base::readLines("renf90.par")
   if(data_file_name != "renf90.dat") predict_par <- swap_datafile(predict_par, data_file_name)
   predict_par <- c(predict_par, base::paste("OPTION include_effects", random_effect_col))
   base::writeLines(predict_par, "renf90_predict.par")
   command_predict <- paste0(file.path(path_2_execs, predict), " ", "renf90_predict.par")
   output <- execute_command(command = command_predict, logfile = "run_predict.log")
-  
+
   if(is.null(snp_file_name)){
     files_res <- c("run_blup.log", "bvs.dat", "bvs2.dat", "yhat_residual", "solutions")
   } else {
@@ -228,7 +253,7 @@ run_cva <- function(missing_value_code = NULL,
   }
 
   for(i in 1:length(files_res)) if(file.exists(files_res[i])) file.rename(from = files_res[i], to = file.path(output_files_dir,files_res[i]))
-  
+
   # Prepare files for each BLUP run
   renf90 <- base::readLines(paste0("renf90.par"))
   #ped_file <- dirname(renf90_ped_name)
@@ -246,138 +271,166 @@ run_cva <- function(missing_value_code = NULL,
     renf90 <- renf90[!base::grepl("map_file", renf90, ignore.case = TRUE)]   # folds run plain BLUP; the SNP map is not needed
     reuse_files <- base::file.path(output_files_dir, c("Gi", clean_snp, base::paste0(clean_snp, "_XrefID")))
   } else reuse_files <- NULL
-  
+
   # Read and preprocess the phenotype data
   bf90_phenos <- utils::read.table(data_file_name, sep = " ", header = FALSE) %>%   # training set (all animals, or genotyped-only when genotyped_only = TRUE)
     dplyr::select(-1)
-  
+
   # Pool of animals eligible to be TESTED (masked): genotyped animals for genomic
   # runs, all animals for pedigree-only runs. Non-genotyped animals are never
   # masked, so they always stay in the training set.
   fold_pool <- bf90_phenos
   if(!is.null(geno_ids))
-    fold_pool <- fold_pool[base::as.character(fold_pool[[random_effect_col + 1]]) %in% geno_ids, , drop = FALSE]
+    fold_pool <- fold_pool[base::as.character(fold_pool[[id_pos]]) %in% geno_ids, , drop = FALSE]
 
-  # Shuffle the eligible animals and create folds
+  # Shuffle the eligible animals and create folds ONCE (the same animal partition is reused for every trait)
   data_shuffled <- base::lapply(1:num_runs, function(x) fold_pool[base::sample(base::nrow(fold_pool)), ] %>%
-                                  dplyr::select((random_effect_col + 1)))
-  
+                                  dplyr::select(dplyr::all_of(id_pos)))
   folds <- base::lapply(data_shuffled, function(x) create_folds(x, num_folds))
-  mutated_data <- base::lapply(folds, function(f) mutate_folds(bf90_phenos, f, num_folds, missing_value_code, random_effect_col + 1))  # id col = random_effect_col+1
-  
-  setwd(output_files_dir)
-  for (run in 1:num_runs) {
-    for (fold in 1:num_folds) {
-      dir_path <- base::sprintf("run%d/fold%d", run, fold)
-      create_cv_datasets(run, 
-                         fold, 
-                         data_frame =  mutated_data[[run]][[fold]],
-                         dir_path, 
-                         renf90, 
-                         renf90_ped_name,
-                         input_files_dir,
-                         reuse_files)
+
+  # y* (corrected phenotype) for every trait, read once from the full-data predictf90 output
+  corrected_all <- utils::read.table(paste0(output_files_dir, "/yhat_residual"), header = FALSE)
+
+  # ---- Per-trait cross-validation (single-trait = the t = 1 special case) ----
+  all_runs   <- base::list()   # per-run rows, tagged with Trait when multi-trait
+  all_avgs   <- base::list()   # averaged rows
+
+  for (ti in seq_along(traits)) {
+    t     <- traits[ti]
+    h2_t  <- h2[ti]
+    ycol  <- ystar_value_cols[ti]
+    tprefix <- if(n_traits == 1) "" else base::sprintf("trait%d/", t)   # keep run%d/fold%d layout for single trait
+
+    if(verbose && n_traits > 1) base::cat(base::sprintf("\n=== Validating trait %d (h2 = %s) ===\n", t, h2_t))
+
+    # Mask ONLY trait t (data column position t) for the fold animals; every other trait stays observed
+    mutated_data <- base::lapply(folds, function(f)
+      base::lapply(1:num_folds, function(i) {
+        p   <- bf90_phenos
+        hit <- p[[id_pos]] %in% base::unlist(f[[i]])
+        p[[t]] <- base::ifelse(hit, missing_value_code, p[[t]])
+        p
+      }))
+
+    base::setwd(output_files_dir)
+    for (run in 1:num_runs) {
+      for (fold in 1:num_folds) {
+        dir_path <- base::paste0(tprefix, base::sprintf("run%d/fold%d", run, fold))
+        create_cv_datasets(run, fold,
+                           data_frame      = mutated_data[[run]][[fold]],
+                           dir_path        = dir_path,
+                           renf90          = renf90,
+                           renf90_ped_name = renf90_ped_name,
+                           input_files_dir = input_files_dir,
+                           reuse_files     = reuse_files)
+      }
     }
-  }
-  
-  # Run BLUPf90+ for each fold and collect EBVs
-  ebvs_for_cv_runs <- base::list()
-  for (run in 1:num_runs) {
-    ebvs_for_cv_list <- base::list()
-    for (fold in 1:num_folds) {
-      base::setwd(base::file.path(output_files_dir, base::sprintf("run%d/fold%d", run, fold)))
-      command <- base::paste0(file.path(path_2_execs, blup), base::sprintf(" renf90_run%d_fold%d.par", run, fold))
-      logfile <- base::sprintf("blup_fold%d_run%d.log", fold, run)
-      execute_command(command = command, logfile = logfile)
-      
-      data_file <- base::sprintf("renf90_run%d_fold%d.dat", run, fold)
-      masked_ids <- utils::read.table(data_file) %>%
-        dplyr::filter(V1 == missing_value_code) %>%
-        dplyr::select(random_effect_col + 1) %>%   # id column
-        base::unlist()
-      
-      ebvs_for_cv <- utils::read.table("solutions", header = FALSE, skip = 1) %>%
-        dplyr::filter(V2 == random_effect_col & V3 %in% masked_ids) %>%
-        dplyr::select(3, 4)
-      
-      ebvs_for_cv_list[[fold]] <- ebvs_for_cv
-      utils::write.table(ebvs_for_cv, file = base::sprintf("ebvs_for_cv_run%d_fold%d.dat", run, fold), row.names = FALSE, col.names = TRUE, quote = FALSE)
-      
+
+    # Run BLUPf90+ for each fold and collect this trait's EBVs for the masked animals
+    ebvs_for_cv_runs <- base::list()
+    for (run in 1:num_runs) {
+      ebvs_for_cv_list <- base::list()
+      for (fold in 1:num_folds) {
+        base::setwd(base::file.path(output_files_dir, base::paste0(tprefix, base::sprintf("run%d/fold%d", run, fold))))
+        command <- base::paste0(file.path(path_2_execs, blup), base::sprintf(" renf90_run%d_fold%d.par", run, fold))
+        logfile <- base::sprintf("blup_fold%d_run%d.log", fold, run)
+        execute_command(command = command, logfile = logfile)
+
+        # Animals whose trait-t phenotype was masked in this fold: in the re-read fold .dat the leading blank
+        # column is gone, so trait t is column t and the animal id is column id_pos.
+        data_file  <- base::sprintf("renf90_run%d_fold%d.dat", run, fold)
+        fold_dat   <- utils::read.table(data_file)
+        masked_ids <- base::unlist(fold_dat[fold_dat[[t]] == missing_value_code, id_pos])
+
+        # solutions: 1 trait, 2 effect, 3 level (renumbered id), 4 solution
+        ebvs_for_cv <- utils::read.table("solutions", header = FALSE, skip = 1) %>%
+          dplyr::filter(V1 == t & V2 == random_effect_col & V3 %in% masked_ids) %>%
+          dplyr::select(3, 4)
+
+        ebvs_for_cv_list[[fold]] <- ebvs_for_cv
+        utils::write.table(ebvs_for_cv, file = base::sprintf("ebvs_for_cv_run%d_fold%d.dat", run, fold), row.names = FALSE, col.names = TRUE, quote = FALSE)
+      }
+      ebvs_for_cv_runs[[base::sprintf("ebvs_for_cv_run%d", run)]] <- base::do.call(base::rbind, ebvs_for_cv_list)
     }
-    ebvs_for_cv_runs[[base::sprintf("ebvs_for_cv_run%d", run)]] <- base::do.call(base::rbind, ebvs_for_cv_list)
+    base::setwd(output_files_dir)
+
+    # This trait's corrected phenotype (id, y*)
+    corrected_phenos <- corrected_all[, c(1, ycol)]
+    base::colnames(corrected_phenos) <- c("V1", "V2")
+
+    ystar_correlations <- base::numeric(num_runs)
+    bias_list          <- base::numeric(num_runs)
+    accuracy_list      <- base::numeric(num_runs)
+
+    for (i in 1:num_runs) {
+      ystar <- dplyr::inner_join(ebvs_for_cv_runs[[base::sprintf("ebvs_for_cv_run%d", i)]], corrected_phenos, by = c("V3" = "V1"))
+      ystar_correlations[i] <- base::round(stats::cor(ystar$V4, ystar$V2), 3)
+
+      model <- stats::lm(V2 ~ V4, data = ystar)   # bias (LR b1): corrected phenotype (V2) regressed on EBV (V4)
+      bias_list[i] <- base::round(stats::coefficients(model)["V4"], 3)
+
+      accuracy_list[i] <- base::round(ystar_correlations[i] / base::sqrt(h2_t), 3)
+    }
+
+    # Per-run and averaged results for this trait
+    res_runs <- base::data.frame(
+      Metric = rep(c("predictive ability", "bias", "accuracy"), each = num_runs),
+      Run    = paste("Run", rep(1:num_runs, times = 3)),
+      Value  = c(ystar_correlations, bias_list, accuracy_list)
+    )
+    res_avg <- base::data.frame(
+      Metric = c("predictive ability", "bias", "accuracy"),
+      Run    = "Average",
+      Value  = c(base::round(base::mean(ystar_correlations), 3),
+                 base::round(base::mean(bias_list), 3),
+                 base::round(base::mean(ystar_correlations) / base::sqrt(h2_t), 3))
+    )
+    if(n_traits > 1) { res_runs <- base::cbind(Trait = t, res_runs); res_avg <- base::cbind(Trait = t, res_avg) }
+    all_runs[[ti]] <- res_runs
+    all_avgs[[ti]] <- res_avg
+
+    if(verbose && n_traits > 1)
+      base::cat(base::sprintf("  trait %d -> predictive ability %.3f | bias %.3f | accuracy %.3f\n",
+                              t, base::mean(ystar_correlations), base::mean(bias_list),
+                              base::mean(ystar_correlations) / base::sqrt(h2_t)))
   }
-  base::setwd(output_files_dir)
-  
-  # Calculate correlations and bias
-  corrected_phenos <- utils::read.table(paste0(output_files_dir, "/yhat_residual"), header = FALSE) %>% dplyr::select(1, 2)
-  
-  ystar_correlations <- base::numeric(num_runs)
-  bias_list <- base::numeric(num_runs)
-  accuracy_list <- base::numeric(num_runs)
-  
-  for (i in 1:num_runs) {
-    ystar <- dplyr::inner_join(ebvs_for_cv_runs[[base::sprintf("ebvs_for_cv_run%d", i)]], corrected_phenos, by = c("V3" = "V1"))
-    ystar_correlations[i] <- base::round(stats::cor(ystar$V4, ystar$V2), 3)
-    
-    model <- stats::lm(V2 ~ V4, data = ystar)   # bias (LR b1): corrected phenotype (V2) regressed on EBV (V4)
-    bias_list[i] <- base::round(stats::coefficients(model)["V4"], 3)
-    
-    accuracy_list[i] <- base::round(ystar_correlations[i] / base::sqrt(h2), 3)
-  }
-  
-  # Collecting results for verbose output
-  verbose_results <- data.frame(
-    Metric = rep(c("predictive ability", "bias", "accuracy"), each = num_runs),
-    Run = paste("Run", rep(1:num_runs, times = 3)),
-    Value = c(ystar_correlations, bias_list, accuracy_list)
-  )
-  
-  # Calculate averages
-  ystar_accuracy <- base::round(base::mean(ystar_correlations), 3)
-  y_corrected_accuracy <- base::round(ystar_accuracy / base::sqrt(h2), 3)
-  average_bias <- base::round(base::mean(bias_list), 3)
-  
-  # Create data frame with only the desired averaged metrics
-  summary_data <- base::data.frame(
-    Metric = c("predictive ability", "bias", "accuracy"),
-    Run = "Average",
-    Value = c(ystar_accuracy, average_bias, y_corrected_accuracy)
-  )
-  
+
+  verbose_results <- base::do.call(base::rbind, all_runs)
+  summary_data    <- base::do.call(base::rbind, all_avgs)
+
   # Open the output file for writing
   output_file <- file(output_table_name, "w")
-  
+
   # Write the parameters to the file
   writeLines("***** Parameters used for CV Analysis *****", output_file)
   writeLines(paste("  missing_value_code =", missing_value_code), output_file)
   writeLines(paste("  random_effect_col =", random_effect_col), output_file)
-  writeLines(paste("  h2 =", h2), output_file)
+  writeLines(paste("  h2 =", paste(h2, collapse = " ")), output_file)
+  writeLines(paste("  multivariate (n traits) =", n_traits), output_file)
   writeLines(paste("  num_runs =", num_runs), output_file)
   writeLines(paste("  num_folds =", num_folds), output_file)
-  
+
   # Write section title and detailed per-run results
   writeLines("\n***** Predictive Ability, Bias, and Accuracy Per Run *****", output_file)
   utils::write.table(verbose_results, file = output_file, row.names = FALSE, quote = FALSE, append = TRUE)
-  
+
   # Write section title and summary results
   writeLines("\n***** Predictive Ability, Bias, and Accuracy Results (Averages) *****", output_file)
   utils::write.table(summary_data, file = output_file, row.names = FALSE, quote = FALSE, append = TRUE)
-  
+
   # Close the output file
   close(output_file)
-  
+
   # Print the results per run if verbose is TRUE
   if (verbose) {
     base::cat("\n*****Predictive Ability, Bias, and Accuracy Per Run*****\n")
     print(verbose_results, row.names = FALSE)
   }
-  
+
   # Print out summarized results regardless of Verbose
   base::cat("\n*****Predictive Ability, Bias, and Accuracy Results*****\n")
-  base::cat("predictive ability: ", ystar_accuracy, "\n", sep = "")
-  base::cat("bias: ", average_bias, "\n", sep = "")
-  base::cat("accuracy: ", y_corrected_accuracy, "\n", sep = "")
-  
+  print(summary_data, row.names = FALSE)
+
   # Set the working directory back to the original path
   setwd(wd_path)
 }
