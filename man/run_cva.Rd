@@ -10,6 +10,8 @@ run_cva(
   h2 = NULL,
   num_runs = NULL,
   num_folds = NULL,
+  multivariate = 1,
+  ystar_value_cols = NULL,
   path_2_execs = ".",
   input_files_dir = ".",
   output_files_dir = ".",
@@ -24,11 +26,19 @@ run_cva(
 
 \item{random_effect_col}{Column where random effect is located, found under RANDOM_GROUP in the renf90.par file.}
 
-\item{h2}{estimate of narrow-sense heritabilty.This value is use to calculate accuracy of ebvs}
+\item{h2}{estimate of narrow-sense heritabilty. Used to calculate accuracy of ebvs. A single value when
+\code{multivariate = 1}; a vector with one value per trait (in trait order) when \code{multivariate > 1}.}
 
 \item{num_runs}{Number of independent cross-validation runs to be performed.}
 
 \item{num_folds}{Number of folds to be generated within each independent run.}
+
+\item{multivariate}{number of traits in the model. Default 1 = single-trait CVA (unchanged). A value greater
+than 1 validates each of the traits in turn within the multi-trait model and reports results per trait.}
+
+\item{ystar_value_cols}{optional integer vector giving, for each trait, the column of \code{yhat_residual} that
+holds that trait's corrected phenotype (y*). NULL (default) assumes trait t is in column \code{t + 1}
+(id in column 1); for a single trait this is column 2, as before.}
 
 \item{path_2_execs}{path to a folder that holds all blupf90 executables that ill be used (blupf90+,predictf90). This field should be in quotes "".}
 
@@ -45,7 +55,7 @@ run_cva(
 \item{verbose}{logical defining if information will be printed on the console}
 }
 \value{
-a tab-separated file that includes accuracy and bias estimates of ebvs.
+a tab-separated file that includes predictive ability, accuracy and bias estimates of ebvs (per trait when multivariate > 1).
 }
 \description{
 This function runs a K-fold cross-validation analysis (CVA) using blupf90 modules.
@@ -54,6 +64,10 @@ This function runs a K-fold cross-validation analysis (CVA) using blupf90 module
 This function sets up and runs a K-fold cross-validation analysis (CVA) using blupf90+ and predictf90.
 The function run_renumf90 needs to be used beforehand to process a .par file created by the user.
 Using the phenotype corrected for all fixed effects (y*), the function reports predictive ability as the correlation between y* and the ebvs, accuracy as that correlation divided by the square-root of the narrow-sense heritability, and bias as the regression of y* on the ebvs.
+For a multi-trait model set \code{multivariate} to the number of traits: each trait is validated in turn inside
+the full multi-trait model (only that trait's phenotype is masked in the test fold, the others stay observed),
+and predictive ability / bias / accuracy are reported per trait. \code{multivariate = 1} (the default) is the
+single-trait analysis and behaves exactly as before.
 }
 \examples{
 ## Example for a CVA with 5 independent runs dividing the data in 10 folds.

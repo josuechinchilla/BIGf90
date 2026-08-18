@@ -4,27 +4,44 @@
 \alias{clean_ebvs}
 \title{Clean ebvs}
 \usage{
-clean_ebvs(random_effect_col, solutions_output_name)
+clean_ebvs(
+  random_effect_col,
+  solutions_output_name,
+  multivariate = 1,
+  trait_names = NULL
+)
 }
 \arguments{
 \item{random_effect_col}{Column where random effect is located, found under RANDOM_GROUP in the renf90.par file.}
 
 \item{solutions_output_name}{name for the output file.  This field should be in quotes "".}
+
+\item{multivariate}{number of traits in the model. Default 1 gives the single-trait output (ID, EBV). A value
+greater than 1 keeps every trait and writes one EBV column per trait (ID, EBV_1, ...); it is also checked
+against the number of traits actually present in the solutions file.}
+
+\item{trait_names}{optional character vector of names for the per-trait EBV columns (multi-trait only),
+in trait order. Defaults to EBV_1, EBV_2, ...}
 }
 \value{
-a tab-separated file that includes the original id and ebv for all individuals for which an EBV was produced.
+a tab-separated file with the original id and ebv(s): two columns for a single trait, or ID plus one
+column per trait for a multi-trait model.
 }
 \description{
 This function formats BLUP solutions.
 }
 \details{
-This function cleans and formats the raw solutions file produced by blupf90+ by removing the solutions to all effects other than the random effect (ebvs).
-I also matches the processed ID assigned by renumf90 to the original ID for each individual tested producing a interpretable output file with two columns: ID and EBV.
+This function cleans and formats the raw solutions file produced by blupf90+ (or gibbsf90+) by keeping the
+solutions of the random (animal) effect (the ebvs) and matching the renumf90-processed ID back to the
+original ID for each individual. For a single-trait model it writes two columns, ID and EBV. For a
+multi-trait model (\code{multivariate} > 1) it keeps the trait dimension and writes one EBV column per
+trait (ID, EBV_1, EBV_2, ...).
 }
 \examples{
 
 \donttest{
-  #clean_ebvs(3, "my_clean_ebvs")
+  #clean_ebvs(3, "my_clean_ebvs")                    # single trait -> ID, EBV
+  #clean_ebvs(3, "my_clean_ebvs", multivariate = 3)  # 3 traits    -> ID, EBV_1, EBV_2, EBV_3
 }
 
 }

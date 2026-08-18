@@ -30,7 +30,7 @@ run_gibbs(
 \item{verbose}{logical if TRUE prints log information}
 }
 \value{
-No return value, called for side effects: runs gibbsf90+, producing the MCMC posterior-sample files (e.g. last_solutions, gibbs_samples, fort.99) and the run_gibbs.log log file.
+No return value, called for side effects: runs gibbsf90+, producing the MCMC posterior-sample files (e.g. last_solutions, gibbs_samples, fort.99, and final_solutions when OPTION solution/fixed_var is used) and the run_gibbs.log log file.
 }
 \description{
 This function runs gibbsf90+.
@@ -39,6 +39,11 @@ This function runs gibbsf90+.
 This function runs gibbsf90+ using input from the user and a renf90.par file.
 This function is written to use a renf90.par paramererfile, therefore the function run_renumf90 needs to be used beforehand to process a .par file created by the user.
 The user will have to enter the number of samples in the MCMC chain, the number of samples to burn and the number used to thin samples. A log file called run_gibbs.log is also produced.
+gibbsf90+ fits mixed threshold-linear models: categorical (ordinal) traits are declared with \code{OPTION cat}
+(one value per trait, 0 for continuous; e.g. \code{options = "cat 4"} in write_par) and analysed on the
+underlying liability scale, so a separate threshold program is not needed. With \code{OPTION solution mean}
+gibbsf90+ also writes posterior-mean solutions to \code{final_solutions}, which this function moves alongside
+the sample files when present.
 }
 \examples{
 ## Example
