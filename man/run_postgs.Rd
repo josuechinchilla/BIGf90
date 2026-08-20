@@ -43,10 +43,9 @@ carry a \code{map_file} (for SNP positions / Manhattan plots) and the desired
 postGSf90 OPTIONs (e.g. \code{windows_variance}, \code{Manhattan_plot}).
 }
 \examples{
-
-\donttest{
- # run_postgs(path_2_execs    = "/path/to/bf90_execs/",
- #            input_files_dir = "renumbered")
+\dontrun{
+run_postgs(path_2_execs    = "/path/to/bf90_execs/",
+           input_files_dir = "renumbered")
 }
 
 }

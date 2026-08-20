@@ -70,18 +70,17 @@ and predictive ability / bias / accuracy are reported per trait. \code{multivari
 single-trait analysis and behaves exactly as before.
 }
 \examples{
-## Example for a CVA with 5 independent runs dividing the data in 10 folds.
-
-
-# run_cva(path_2_execs = "/Users/johndoe/Desktop/bf90_execs/",
-#      missing_value_code = -999,
-#      random_effect_col= 3,
-#      h2 = 0.5,
-#      num_runs = 5,
-#      num_folds = 10,
-#      output_table_name = "example_run",
-#      input_files_dir = ".",
-#      output_files_dir = ".")
-
+## CVA with 5 independent runs dividing the data into 10 folds.
+\dontrun{
+run_cva(path_2_execs = "/path/to/bf90_execs/",
+        missing_value_code = -999,
+        random_effect_col = 3,
+        h2 = 0.5,
+        num_runs = 5,
+        num_folds = 10,
+        output_table_name = "example_run",
+        input_files_dir = ".",
+        output_files_dir = ".")
+}
 
 }

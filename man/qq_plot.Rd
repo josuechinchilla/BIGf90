@@ -74,11 +74,10 @@ statistic by the genome-wide lambda before recomputing p. When \code{gc_correct 
 the reported lambda is 1.000 (corrected); the original lambda is shown in parentheses.
 }
 \examples{
-
-\donttest{
- # g <- run_gwas(execs, "gwas.par", "gwas_run", iterations = 1, snp_pvalue = TRUE)
- # qq_plot(g)                                 # overall
- # qq_plot("gwas_run", per_chromosome = TRUE) # one panel per chromosome
+\dontrun{
+g <- run_gwas(execs, "gwas.par", "gwas_run", iterations = 1, snp_pvalue = TRUE)
+qq_plot(g)                                 # overall
+qq_plot("gwas_run", per_chromosome = TRUE) # one panel per chromosome
 }
 
 }

@@ -31,11 +31,10 @@ This function runs renumf90 to process the raw parameter(.par) file to be used w
 The outputs will be the standard output files produced by renumf90. A log file called run_renum.log is also produced.
 }
 \examples{
-
-\donttest{
- #run_renum(path_2_execs = "path/bf90_execs/",
- #          raw_par_file = "my_analysis.par",
- #          output_files_dir = "results")
+\dontrun{
+run_renum(path_2_execs = "/path/to/bf90_execs/",
+          raw_par_file = "my_analysis.par",
+          output_files_dir = "results")
 }
 
 

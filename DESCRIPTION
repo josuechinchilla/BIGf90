@@ -1,20 +1,31 @@
 Package: BIGf90
-Title: R Face Front for Running K-Fold Crossvalidation, Estimating EBVs and Variance Component Estimation with Blupf90 Modules
+Title: Interface to the 'BLUPF90' Programs for Genomic Evaluation and Cross-Validation
 Version: 1.0.0
-Authors@R: c(person("Josue", "Chinchilla-Vargas", role = c("aut", "cre"), email = "jc3635@cornell.edu"),
-             person("Cristiane", "Taniguti", role = "aut"),
-             person("Alexander", "Sandercock", role = "aut"),
-             person("Breeding Insight Team", role = "ctb"))
-Maintainer: Josue Chinchilla-Vargas <jc3635@cornell.edu>
-Description: Provides R functions to run several BLUPf90 modules. Along with an R function to run K-fold crossvalidation for univariate analyses through blupf90+. 
-    The output table from the K-fold crossvalidation function reports predictive ability as cor(y*, ebv^) and bias as the regression of y* on ebv^, with accuracy as cor(y*, ebv^)/sqrt(h2), where y* is the phenotype corrected for all fixed effects.
-    You can create the .par file to feed into Renumf90 manually or with write_par(). Once this is done, there are functions to run Renumf90, Blupf90+, Predictf90, Gibbsf90+ and Postgibbsf90.
-    If you need to learn how to use the blupf90 suite of programs refer to nce.ads.uga.edu/wiki/doku.php?id=start. Please remember to cite Blupf90 appropriately along with this package  when used for publications.
-    To run the functions in this package you will need to have a directory with all the blupf90 executables so that you can indicate the path for R to find the execs.
-    As of version 0.3.0, all functions have been tested in PC and Unix environments, we have noticed that PC environments tend to have issues about permissions, so it is advised to run RStudio as administrator when planning to use this package.
-License: Apache License (== 2.0)
+Authors@R: c(
+    person("Josue", "Chinchilla-Vargas", role = c("aut", "cre"),
+           email = "jc3635@cornell.edu", comment = c(ORCID = "0000-0002-2399-7849")),
+    person("Cristiane", "Taniguti", role = "aut",
+           comment = c(ORCID = "0000-0002-2021-6883")),
+    person("Alexander", "Sandercock", role = "aut",
+           comment = c(ORCID = "0000-0001-6897-1856")),
+    person("Breeding Insight", role = c("cph", "fnd")))
+Description: A front-end to the 'BLUPF90' family of programs for pedigree- and
+    genomic-based genetic evaluation. Provides wrappers to run 'RENUMF90',
+    'BLUPF90+', 'GIBBSF90+', 'POSTGIBBSF90', 'PREDICTF90', 'PREGSF90' and
+    'POSTGSF90', helpers to build the parameter and genotype input files, and a
+    k-fold cross-validation routine for univariate models. The cross-validation
+    reports predictive ability as the correlation between the corrected phenotype
+    and the estimated breeding value, bias as the regression of the corrected
+    phenotype on the estimated breeding value, and accuracy as that correlation
+    divided by the square root of the heritability. The 'BLUPF90' executables are
+    not distributed with this package and must be obtained separately from
+    <https://nce.ads.uga.edu/wiki/doku.php?id=start>.
+License: Apache License (>= 2)
 URL: https://github.com/Breeding-Insight/BIGf90
 BugReports: https://github.com/Breeding-Insight/BIGf90/issues
+SystemRequirements: BLUPf90 family programs (renumf90, blupf90+, gibbsf90+,
+    postgibbsf90, predictf90, preGSf90, postGSf90, predf90), obtained separately
+    from <https://nce.ads.uga.edu/>.
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 Depends:

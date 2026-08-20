@@ -53,11 +53,10 @@ preceding \code{\link{run_blup}} and \code{OPTION snp_var} in postGSf90 (so the
 \code{snp_var} file is present).
 }
 \examples{
-
-\donttest{
- # run_predf(path_2_execs    = "/path/to/bf90_execs/",
- #           snp_file        = "young_animals.geno",
- #           input_files_dir = "renumbered")
+\dontrun{
+run_predf(path_2_execs    = "/path/to/bf90_execs/",
+          snp_file        = "young_animals.geno",
+          input_files_dir = "renumbered")
 }
 
 }

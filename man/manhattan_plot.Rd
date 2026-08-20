@@ -104,12 +104,11 @@ recomputing p, recentring the null. When \code{gc_correct = TRUE} the reported
 lambda is 1.000 (corrected); the original lambda is shown in parentheses.
 }
 \examples{
-
-\donttest{
- # g <- run_gwas(execs, "gwas.par", "gwas_run", iterations = 2, windows_mbp = 1)
- # manhattan_plot(g, by = "window", threshold = 0.02)        # variance windows
- # manhattan_plot("gwas_run", statistic = "pvalue",          # needs snp_pvalue = TRUE
- #                threshold = c("bonferroni", "fdr"))
+\dontrun{
+g <- run_gwas(execs, "gwas.par", "gwas_run", iterations = 2, windows_mbp = 1)
+manhattan_plot(g, by = "window", threshold = 0.02)        # variance windows
+manhattan_plot("gwas_run", statistic = "pvalue",          # needs snp_pvalue = TRUE
+               threshold = c("bonferroni", "fdr"))
 }
 
 }

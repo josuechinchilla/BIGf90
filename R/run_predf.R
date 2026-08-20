@@ -28,11 +28,10 @@
 #'   as the files new to the run directory, plus run_predf.log). Names are the file
 #'   names; values are the full paths.
 #' @examples
-#'
-#' \donttest{
-#'  # run_predf(path_2_execs    = "/path/to/bf90_execs/",
-#'  #           snp_file        = "young_animals.geno",
-#'  #           input_files_dir = "renumbered")
+#' \dontrun{
+#' run_predf(path_2_execs    = "/path/to/bf90_execs/",
+#'           snp_file        = "young_animals.geno",
+#'           input_files_dir = "renumbered")
 #' }
 #'
 #' @export

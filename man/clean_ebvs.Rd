@@ -38,10 +38,9 @@ multi-trait model (\code{multivariate} > 1) it keeps the trait dimension and wri
 trait (ID, EBV_1, EBV_2, ...).
 }
 \examples{
-
-\donttest{
-  #clean_ebvs(3, "my_clean_ebvs")                    # single trait -> ID, EBV
-  #clean_ebvs(3, "my_clean_ebvs", multivariate = 3)  # 3 traits    -> ID, EBV_1, EBV_2, EBV_3
+\dontrun{
+clean_ebvs(3, "my_clean_ebvs")                    # single trait -> ID, EBV
+clean_ebvs(3, "my_clean_ebvs", multivariate = 3)  # 3 traits    -> ID, EBV_1, EBV_2, EBV_3
 }
 
 }

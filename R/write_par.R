@@ -59,24 +59,23 @@
 #'
 #' @return (invisibly) the character vector of lines written to \code{file}.
 #' @examples
-#'
-#' \donttest{
-#'  # two-trait repeatability model: animal + permanent environment, genomic
-#'  # write_par(file     = "act.par",
-#'  #           datafile = "act_act_auc.csv",
-#'  #           traits   = c(6, 7),
-#'  #           residual_variance = diag(2),
-#'  #           effects  = list(lact_group         = list(col = 2, class = "alpha"),
-#'  #                           breed_group        = list(col = 3, class = "alpha"),
-#'  #                           DIM_group          = list(col = 4, class = "alpha"),
-#'  #                           contemporary_group = list(col = 5, class = "alpha"),
-#'  #                           animal             = list(col = 1, class = "alpha")),
-#'  #           random        = 1,          # the animal effect is column 1 (label can be anything)
-#'  #           optional      = "pe",
-#'  #           pedigree_file = "ponderosa.ped",
-#'  #           snp_file      = "ponderosa_bulls.geno",
-#'  #           covariances   = matrix(c(1, 0.1, 0.1, 1), 2, 2),
-#'  #           options       = "cat 0 0")
+#' \dontrun{
+#' # two-trait repeatability model: animal + permanent environment, genomic
+#' write_par(file     = "act.par",
+#'           datafile = "act_act_auc.csv",
+#'           traits   = c(6, 7),
+#'           residual_variance = diag(2),
+#'           effects  = list(lact_group         = list(col = 2, class = "alpha"),
+#'                           breed_group        = list(col = 3, class = "alpha"),
+#'                           DIM_group          = list(col = 4, class = "alpha"),
+#'                           contemporary_group = list(col = 5, class = "alpha"),
+#'                           animal             = list(col = 1, class = "alpha")),
+#'           random        = 1,          # the animal effect is column 1 (label can be anything)
+#'           optional      = "pe",
+#'           pedigree_file = "ponderosa.ped",
+#'           snp_file      = "ponderosa_bulls.geno",
+#'           covariances   = matrix(c(1, 0.1, 0.1, 1), 2, 2),
+#'           options       = "cat 0 0")
 #' }
 #'
 #' @export

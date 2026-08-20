@@ -59,12 +59,11 @@
 #'   Front Genet 10:442. Benjamini Y, Hochberg Y (1995) J R Stat Soc B 57:289-300.
 #'   Devlin B, Roeder K (1999) Biometrics 55:997-1004.
 #' @examples
-#'
-#' \donttest{
-#'  # g <- run_gwas(execs, "gwas.par", "gwas_run", iterations = 2, windows_mbp = 1)
-#'  # manhattan_plot(g, by = "window", threshold = 0.02)        # variance windows
-#'  # manhattan_plot("gwas_run", statistic = "pvalue",          # needs snp_pvalue = TRUE
-#'  #                threshold = c("bonferroni", "fdr"))
+#' \dontrun{
+#' g <- run_gwas(execs, "gwas.par", "gwas_run", iterations = 2, windows_mbp = 1)
+#' manhattan_plot(g, by = "window", threshold = 0.02)        # variance windows
+#' manhattan_plot("gwas_run", statistic = "pvalue",          # needs snp_pvalue = TRUE
+#'                threshold = c("bonferroni", "fdr"))
 #' }
 #'
 #' @export
@@ -154,7 +153,7 @@ manhattan_plot <- function(x = ".",
       grDevices::png(save_to, width = width, height = height, units = "in", res = res)
     on.exit(grDevices::dev.off(), add = TRUE)
   }
-  # When save_to = NULL, do NOT call dev.new() — let RStudio use its Plots pane
+  # When save_to = NULL, do NOT call dev.new() -- let RStudio use its Plots pane
   
   if (is.null(main))
     main <- if (pv_mode) sprintf("Manhattan plot (-log10 p%s)", if (gc_correct) ", GC-corrected" else "")

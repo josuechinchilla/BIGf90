@@ -10,9 +10,9 @@
 #'
 #' @return No return value, called for side effects: runs predictf90, producing the yhat_residual file (adjusted phenotypes and residuals) and the run_predict.log log file.
 #' @examples
-#' ## Example
-#'
-#' # run_predict(path_2_execs = "/Users/johndoe/Desktop/bf90_execs/")
+#' \dontrun{
+#' run_predict(path_2_execs = "/path/to/bf90_execs/")
+#' }
 #'
 #' @export
 run_predict <- function(path_2_execs) {

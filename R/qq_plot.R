@@ -42,11 +42,10 @@
 #' @references Aguilar I et al. (2019) Front Genet 10:442. Devlin B, Roeder K (1999)
 #'   Biometrics 55:997-1004.
 #' @examples
-#'
-#' \donttest{
-#'  # g <- run_gwas(execs, "gwas.par", "gwas_run", iterations = 1, snp_pvalue = TRUE)
-#'  # qq_plot(g)                                 # overall
-#'  # qq_plot("gwas_run", per_chromosome = TRUE) # one panel per chromosome
+#' \dontrun{
+#' g <- run_gwas(execs, "gwas.par", "gwas_run", iterations = 1, snp_pvalue = TRUE)
+#' qq_plot(g)                                 # overall
+#' qq_plot("gwas_run", per_chromosome = TRUE) # one panel per chromosome
 #' }
 #'
 #' @export
@@ -99,7 +98,7 @@ qq_plot <- function(x = ".",
       grDevices::png(save_to, width = width, height = height, units = "in", res = res)
     on.exit(grDevices::dev.off(), add = TRUE)
   }
-  # When save_to = NULL, do NOT call dev.new() — let RStudio use its Plots pane
+  # When save_to = NULL, do NOT call dev.new() -- let RStudio use its Plots pane
   
   if (per_chromosome) {
     chrs <- sort(unique(d$chr))

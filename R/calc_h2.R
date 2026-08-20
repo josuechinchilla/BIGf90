@@ -23,12 +23,11 @@
 #'   reading samples; NA otherwise), \code{sigma_a}, \code{sigma_e}, \code{sigma_p} and
 #'   \code{n_samples}.
 #' @examples
-#'
-#' \donttest{
-#'  # after run_gibbs(...) and run_postgibbs(...):
-#'  # h <- calc_h2(random_effect = 3, input_files_dir = "renumbered")           # from postmean
-#'  # h <- calc_h2(random_effect = 3, input_files_dir = "renumbered",
-#'  #              from_postmean = FALSE)                                        # from the samples
+#' \dontrun{
+#' # after run_gibbs(...) and run_postgibbs(...):
+#' h <- calc_h2(random_effect = 3, input_files_dir = "renumbered")           # from postmean
+#' h <- calc_h2(random_effect = 3, input_files_dir = "renumbered",
+#'              from_postmean = FALSE)                                        # from the samples
 #' }
 #'
 #' @export

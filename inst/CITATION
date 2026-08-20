@@ -1,6 +1,6 @@
 bibentry(
   bibtype  = "Manual",
-  title    = "BIGf90: Breeding Insight Genomics R front face to blupf90 modules",
+  title    = "BIGf90: Interface to the 'BLUPF90' Programs for Genomic Evaluation and Cross-Validation",
   author   = c(
     person(given = "Josue", family = "Chinchilla-Vargas", email = "jc3635@cornell.edu", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-2399-7849")),
     person(given = "Cristiane H.", family = "Taniguti", role = c("aut"), comment = c(ORCID = "0000-0002-2021-6883")),
@@ -8,6 +8,6 @@ bibentry(
     person(given = "Breeding Insight Team", role = "aut")
   ),
   year     = "2024",
-  note     = "R package version 0.5.0",
+  note     = sprintf("R package version %s", meta$Version),
   url      = "https://github.com/Breeding-Insight/BIGf90"
 )

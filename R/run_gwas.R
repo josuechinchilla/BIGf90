@@ -41,12 +41,11 @@
 #' @references Wang H et al. (2012) Genet Res 94:73-83. Vallejo RL et al. (2024)
 #'   Aquaculture 586:740819. Misztal I et al. (2015) BLUPF90 family of programs.
 #' @examples
-#'
-#' \donttest{
-#'  # run_gwas(path_2_execs     = "/path/to/bf90_execs/",
-#'  #          raw_par_file     = "gwas_model.par",
-#'  #          output_files_dir = "gwas_run",
-#'  #          iterations = 2, windows_mbp = 1)
+#' \dontrun{
+#' run_gwas(path_2_execs     = "/path/to/bf90_execs/",
+#'          raw_par_file     = "gwas_model.par",
+#'          output_files_dir = "gwas_run",
+#'          iterations = 2, windows_mbp = 1)
 #' }
 #'
 #' @export

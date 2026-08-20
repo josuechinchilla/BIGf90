@@ -22,10 +22,9 @@
 #'   produced, e.g. \code{snp_sol}, \code{windows_variance}, \code{snp_pred} and any
 #'   Manhattan-plot files. Names are the file names; values are the full paths.
 #' @examples
-#'
-#' \donttest{
-#'  # run_postgs(path_2_execs    = "/path/to/bf90_execs/",
-#'  #            input_files_dir = "renumbered")
+#' \dontrun{
+#' run_postgs(path_2_execs    = "/path/to/bf90_execs/",
+#'            input_files_dir = "renumbered")
 #' }
 #'
 #' @export

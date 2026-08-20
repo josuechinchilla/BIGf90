@@ -52,11 +52,10 @@
 #'   (2006) CODA: convergence diagnosis and output analysis for MCMC. R News 6:7-11.
 #'   Geweke J (1992). Raftery AE, Lewis SM (1992).
 #' @examples
-#'
-#' \donttest{
-#'  # after run_gibbs(...) [and optionally run_postgibbs(...)]:
-#'  # d <- mcmc_diagnostics(input_files_dir = "renumbered", random_effect = 3)
-#'  # d$converged; d$table; d$suggested        # verdict, table, re-run recipe
+#' \dontrun{
+#' # after run_gibbs(...) [and optionally run_postgibbs(...)]:
+#' d <- mcmc_diagnostics(input_files_dir = "renumbered", random_effect = 3)
+#' d$converged; d$table; d$suggested        # verdict, table, re-run recipe
 #' }
 #'
 #' @export

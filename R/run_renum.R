@@ -12,11 +12,10 @@
 #'
 #' @return No return value, called for side effects: runs renumf90, producing the renumbered renf90.* files, the renumbered pedigree (renadd0X.ped) and the genotype cross-reference (_XrefID) file.
 #' @examples
-#'
-#' \donttest{
-#'  #run_renum(path_2_execs = "path/bf90_execs/",
-#'  #          raw_par_file = "my_analysis.par",
-#'  #          output_files_dir = "results")
+#' \dontrun{
+#' run_renum(path_2_execs = "/path/to/bf90_execs/",
+#'           raw_par_file = "my_analysis.par",
+#'           output_files_dir = "results")
 #' }
 #'
 #'
@@ -91,6 +90,7 @@ run_renum <- function(path_2_execs = ".",
   }
   
   cur_dir <- getwd() # save working directory location
+  on.exit(setwd(cur_dir), add = TRUE)   # restore working dir even on error
   
   # Construct the command
   command_renum <- paste0(file.path(path_2_execs, renum)," ", paste0("'",raw_file, "'"))

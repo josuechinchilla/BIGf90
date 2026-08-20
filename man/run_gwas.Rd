@@ -70,12 +70,11 @@ The model is defined by the parameter file you pass -- build it with
 e.g. with \code{\link{run_gibbs}}).
 }
 \examples{
-
-\donttest{
- # run_gwas(path_2_execs     = "/path/to/bf90_execs/",
- #          raw_par_file     = "gwas_model.par",
- #          output_files_dir = "gwas_run",
- #          iterations = 2, windows_mbp = 1)
+\dontrun{
+run_gwas(path_2_execs     = "/path/to/bf90_execs/",
+         raw_par_file     = "gwas_model.par",
+         output_files_dir = "gwas_run",
+         iterations = 2, windows_mbp = 1)
 }
 
 }

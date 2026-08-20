@@ -19,10 +19,9 @@
 #'   column per trait for a multi-trait model.
 #' @import dplyr
 #' @examples
-#'
-#' \donttest{
-#'   #clean_ebvs(3, "my_clean_ebvs")                    # single trait -> ID, EBV
-#'   #clean_ebvs(3, "my_clean_ebvs", multivariate = 3)  # 3 traits    -> ID, EBV_1, EBV_2, EBV_3
+#' \dontrun{
+#' clean_ebvs(3, "my_clean_ebvs")                    # single trait -> ID, EBV
+#' clean_ebvs(3, "my_clean_ebvs", multivariate = 3)  # 3 traits    -> ID, EBV_1, EBV_2, EBV_3
 #' }
 #'
 #' @export

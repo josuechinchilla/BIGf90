@@ -22,12 +22,12 @@
 #' @return No return value, called for side effects: runs gibbsf90+, producing the MCMC posterior-sample files (e.g. last_solutions, gibbs_samples, fort.99, and final_solutions when OPTION solution/fixed_var is used) and the run_gibbs.log log file.
 #'
 #' @examples
-#' ## Example
-#'
-#' # run_gibbs( path_2_execs = "/Users/johndoe/Desktop/bf90_execs/",
-#' # gibbs_iter = 250000,
-#' # gibbs_burn = 20000
-#' # gibbs_keep = 1)
+#' \dontrun{
+#' run_gibbs(path_2_execs = "/path/to/bf90_execs/",
+#'           gibbs_iter = 250000,
+#'           gibbs_burn = 20000,
+#'           gibbs_keep = 1)
+#' }
 #'
 #' @export
 run_gibbs <- function(path_2_execs,
@@ -50,6 +50,7 @@ run_gibbs <- function(path_2_execs,
 
   path_2_execs <- normalizePath(path_2_execs)
   cur_dir <- getwd()
+  on.exit(setwd(cur_dir), add = TRUE)   # restore working dir even on error
 
   #Assign .exe or not based on OS
   if (.Platform$OS.type == "unix") {
@@ -90,7 +91,7 @@ run_gibbs <- function(path_2_execs,
   if(output_files_dir != input_files_dir){
     # final_solutions is written by gibbsf90+ with OPTION solution/fixed_var; the rest are the usual sample files
     files_res <- c("last_solutions", "binary_final_solutions", "final_solutions", "fort.99", "gibbs_samples", "run_gibbs.log")
-    for(i in 1:length(files_res)) if(file.exists(files_res[i])) file.rename(from = files_res[i], to = file.path(output_files_dir,files_res[i]))
+    for(i in seq_along(files_res)) if(file.exists(files_res[i])) file.rename(from = files_res[i], to = file.path(output_files_dir,files_res[i]))
   }
 
   # Remove the temporary file

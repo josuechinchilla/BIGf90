@@ -22,8 +22,8 @@ This function runs blupf90+ using a parameter file named renf90.par.
 Since this function depends only on the renf90.par parameter file, the only input needed from the user is a path where the blupf90+ executable is located. A log file called run_blup.log is also produced.
 }
 \examples{
-## Example
-
-# run_blup(path_2_execs = "/Users/johndoe/Desktop/bf90_execs/")
+\dontrun{
+run_blup(path_2_execs = "/path/to/bf90_execs/")
+}
 
 }

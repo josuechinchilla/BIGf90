@@ -76,11 +76,10 @@ to \code{output_dir}; the normal-QQ plots are also rendered to the active device
 (RStudio Plots pane when running interactively).
 }
 \examples{
-
-\donttest{
- # after run_gibbs(...) [and optionally run_postgibbs(...)]:
- # d <- mcmc_diagnostics(input_files_dir = "renumbered", random_effect = 3)
- # d$converged; d$table; d$suggested        # verdict, table, re-run recipe
+\dontrun{
+# after run_gibbs(...) [and optionally run_postgibbs(...)]:
+d <- mcmc_diagnostics(input_files_dir = "renumbered", random_effect = 3)
+d$converged; d$table; d$suggested        # verdict, table, re-run recipe
 }
 
 }

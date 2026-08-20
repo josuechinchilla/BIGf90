@@ -45,12 +45,11 @@ chains and leave \code{postmean} empty. Heritability is \eqn{h^2 = \sigma^2_a /
 and \eqn{\sigma^2_p} the sum of all variance components. This is for single-trait models.
 }
 \examples{
-
-\donttest{
- # after run_gibbs(...) and run_postgibbs(...):
- # h <- calc_h2(random_effect = 3, input_files_dir = "renumbered")           # from postmean
- # h <- calc_h2(random_effect = 3, input_files_dir = "renumbered",
- #              from_postmean = FALSE)                                        # from the samples
+\dontrun{
+# after run_gibbs(...) and run_postgibbs(...):
+h <- calc_h2(random_effect = 3, input_files_dir = "renumbered")           # from postmean
+h <- calc_h2(random_effect = 3, input_files_dir = "renumbered",
+             from_postmean = FALSE)                                        # from the samples
 }
 
 }

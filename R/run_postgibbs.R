@@ -16,11 +16,11 @@
 #' @return No return value, called for side effects: runs postgibbsf90, producing the posterior mean/SD and convergence-diagnostic files and the run_postgibbs.log log file.
 #'
 #' @examples
-#' ## Example
-#'
-#' # run_postgibbs( path_2_execs = "/Users/johndoe/Desktop/bf90_execs/",
-#' # postgibbs_burn =1,
-#' # postgibbs_keep = 100)
+#' \dontrun{
+#' run_postgibbs(path_2_execs = "/path/to/bf90_execs/",
+#'               postgibbs_burn = 1,
+#'               postgibbs_keep = 100)
+#' }
 #'
 #' @export
 run_postgibbs <- function(path_2_execs, 
@@ -41,6 +41,7 @@ run_postgibbs <- function(path_2_execs,
   output_files_dir <- normalizePath(output_files_dir)
   input_files_dir <- normalizePath(input_files_dir)
   cur_dir <- getwd()
+  on.exit(setwd(cur_dir), add = TRUE)   # restore working dir even on error
   
   #Assign .exe or not based on OS
   if (.Platform$OS.type == "unix") {

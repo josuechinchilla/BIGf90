@@ -47,12 +47,11 @@
 #'
 #' @return (invisibly) a character vector of the animal IDs written, in file order.
 #' @examples
-#'
-#' \donttest{
-#'  # PLINK --recode12 ped (6 lead cols, two allele codes per locus, ID in col 2):
-#'  # write_geno(ped  = "ped012.ped",
-#'  #           file = "bf90_geno.txt",
-#'  #           map  = "ped012.map")   # marker map written to bf90_geno.mapout
+#' \dontrun{
+#' # PLINK --recode12 ped (6 lead cols, two allele codes per locus, ID in col 2):
+#' write_geno(ped  = "ped012.ped",
+#'            file = "bf90_geno.txt",
+#'            map  = "ped012.map")   # marker map written to bf90_geno.mapout
 #' }
 #'
 #' @export

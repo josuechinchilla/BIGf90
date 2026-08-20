@@ -10,9 +10,9 @@
 #'
 #' @return No return value, called for side effects: runs blupf90+ using the parameter file, producing the solutions file and the run_blup.log log file.
 #' @examples
-#' ## Example
-#'
-#' # run_blup(path_2_execs = "/Users/johndoe/Desktop/bf90_execs/")
+#' \dontrun{
+#' run_blup(path_2_execs = "/path/to/bf90_execs/")
+#' }
 #'
 #' @export
 run_blup <- function(path_2_execs, par_file = "renf90.par") {

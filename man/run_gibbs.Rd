@@ -46,11 +46,11 @@ gibbsf90+ also writes posterior-mean solutions to \code{final_solutions}, which 
 the sample files when present.
 }
 \examples{
-## Example
-
-# run_gibbs( path_2_execs = "/Users/johndoe/Desktop/bf90_execs/",
-# gibbs_iter = 250000,
-# gibbs_burn = 20000
-# gibbs_keep = 1)
+\dontrun{
+run_gibbs(path_2_execs = "/path/to/bf90_execs/",
+          gibbs_iter = 250000,
+          gibbs_burn = 20000,
+          gibbs_keep = 1)
+}
 
 }

@@ -21,8 +21,8 @@ This function is written to use a renf90.par file and a solutions file. Therefor
 The output files are be the standard output files produced by predictf90. A log file called run_predict.log is also produced.
 }
 \examples{
-## Example
-
-# run_predict(path_2_execs = "/Users/johndoe/Desktop/bf90_execs/")
+\dontrun{
+run_predict(path_2_execs = "/path/to/bf90_execs/")
+}
 
 }

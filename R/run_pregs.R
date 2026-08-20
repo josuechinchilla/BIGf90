@@ -22,10 +22,9 @@
 #'   \code{freqdata.count}, \code{Gen_conflicts} and the cleaned SNP files. Names are
 #'   the file names; values are the full paths. Intended for use by downstream steps.
 #' @examples
-#'
-#' \donttest{
-#'  # run_pregs(path_2_execs   = "/path/to/bf90_execs/",
-#'  #           input_files_dir = "renumbered")
+#' \dontrun{
+#' run_pregs(path_2_execs    = "/path/to/bf90_execs/",
+#'           input_files_dir = "renumbered")
 #' }
 #'
 #' @export

@@ -38,10 +38,10 @@ This function is written to run using the same renf90.par file used with run_gib
 The user will have to enter the number of samples to burn and the number used to thin samples. A log file called run_postgibbs.log is also produced.
 }
 \examples{
-## Example
-
-# run_postgibbs( path_2_execs = "/Users/johndoe/Desktop/bf90_execs/",
-# postgibbs_burn =1,
-# postgibbs_keep = 100)
+\dontrun{
+run_postgibbs(path_2_execs = "/path/to/bf90_execs/",
+              postgibbs_burn = 1,
+              postgibbs_keep = 100)
+}
 
 }

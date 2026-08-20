@@ -82,12 +82,11 @@ that PLINK output made from a VCF sometimes carries the usable ID in the FID
 column (\code{id_col = 1}) instead, so check your file.
 }
 \examples{
-
-\donttest{
- # PLINK --recode12 ped (6 lead cols, two allele codes per locus, ID in col 2):
- # write_geno(ped  = "ped012.ped",
- #           file = "bf90_geno.txt",
- #           map  = "ped012.map")   # marker map written to bf90_geno.mapout
+\dontrun{
+# PLINK --recode12 ped (6 lead cols, two allele codes per locus, ID in col 2):
+write_geno(ped  = "ped012.ped",
+           file = "bf90_geno.txt",
+           map  = "ped012.map")   # marker map written to bf90_geno.mapout
 }
 
 }

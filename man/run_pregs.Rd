@@ -43,10 +43,9 @@ controlled by OPTION lines in the parameter file. Run \code{\link{run_renum}}
 beforehand so the renf90 files and the genotype \code{_XrefID} are present.
 }
 \examples{
-
-\donttest{
- # run_pregs(path_2_execs   = "/path/to/bf90_execs/",
- #           input_files_dir = "renumbered")
+\dontrun{
+run_pregs(path_2_execs    = "/path/to/bf90_execs/",
+          input_files_dir = "renumbered")
 }
 
 }
